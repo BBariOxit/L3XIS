@@ -11,7 +11,7 @@ import {
   CreditCard,
   Zap,
   Trophy,
-  Sparkles,
+  BookMarked,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -32,11 +32,8 @@ import {
 
 // ─── Navigation config ────────────────────────────────────
 
-const learnItems = [
+const mainItems = [
   { title: "Home", url: "/", icon: Home },
-]
-
-const libraryItems = [
   { title: "Vocabulary", url: "/vocabulary", icon: BookOpen },
   { title: "Collections", url: "/collections", icon: Layers },
 ]
@@ -71,16 +68,16 @@ function NavItem({ title, url, icon: Icon, isActive, isCollapsed }: NavItemProps
         isActive={isActive}
         title={isCollapsed ? title : undefined}
         className={[
-          "h-9 px-3 rounded-xl transition-all duration-200 group",
+          "h-9 px-2.5 rounded-lg transition-colors duration-150 group",
           isActive
-            ? "bg-primary/10 text-primary font-medium shadow-sm"
-            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60",
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
         ].join(" ")}
       >
         <Icon
           className={[
-            "size-4 shrink-0 transition-colors duration-200",
-            isActive ? "text-primary" : "opacity-60 group-hover:opacity-100",
+            "size-4 shrink-0",
+            isActive ? "text-primary" : "opacity-55 group-hover:opacity-90",
           ].join(" ")}
         />
         <span className="text-sm">{title}</span>
@@ -91,21 +88,21 @@ function NavItem({ title, url, icon: Icon, isActive, isCollapsed }: NavItemProps
 
 interface NavGroupProps {
   label: string
-  items: typeof learnItems
+  items: typeof mainItems
   pathname: string
   isCollapsed: boolean
 }
 
 function NavGroup({ label, items, pathname, isCollapsed }: NavGroupProps) {
   return (
-    <SidebarGroup>
+    <SidebarGroup className="py-0">
       {!isCollapsed && (
-        <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 mb-1">
+        <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 h-7">
           {label}
         </SidebarGroupLabel>
       )}
       <SidebarGroupContent>
-        <SidebarMenu className="gap-0.5">
+        <SidebarMenu className="gap-px">
           {items.map((item) => (
             <NavItem
               key={item.title}
@@ -130,38 +127,32 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r-0">
       {/* Logo */}
-      <SidebarHeader className="h-14 flex items-center justify-start px-3 border-b border-sidebar-border/40">
-        <Link href="/" className="flex items-center gap-3 w-full group">
+      <SidebarHeader className="h-14 px-3 border-b border-sidebar-border/50 flex items-center">
+        <Link href="/" className="flex items-center gap-2.5 w-full group min-w-0">
           <div
-            className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-xl gradient-primary text-white shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200"
+            className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary transition-colors duration-150 group-hover:bg-primary/25"
             aria-hidden="true"
           >
-            <Sparkles className="size-4" />
+            <BookMarked className="size-4" />
           </div>
 
           {!isCollapsed && (
-            <div className="flex flex-col leading-none overflow-hidden">
-              <span className="font-bold text-sm tracking-tight text-sidebar-foreground">
-                L3XIS
-              </span>
-              <span className="text-[10px] font-medium text-sidebar-foreground/40 uppercase tracking-wider">
-                Vocab Mastery
-              </span>
-            </div>
+            <span className="font-bold text-sm tracking-tight text-sidebar-foreground truncate">
+              L3XIS
+            </span>
           )}
         </Link>
       </SidebarHeader>
 
       {/* Nav */}
-      <SidebarContent className="px-2 py-3 flex flex-col gap-4 overflow-y-auto">
-        <NavGroup label="Learn" items={learnItems} pathname={pathname} isCollapsed={isCollapsed} />
-        <NavGroup label="My Words" items={libraryItems} pathname={pathname} isCollapsed={isCollapsed} />
+      <SidebarContent className="px-2 py-3 flex flex-col gap-3 overflow-y-auto">
+        <NavGroup label="General" items={mainItems} pathname={pathname} isCollapsed={isCollapsed} />
         <NavGroup label="Study" items={studyItems} pathname={pathname} isCollapsed={isCollapsed} />
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="px-2 pb-3 pt-2 border-t border-sidebar-border/40">
-        <SidebarMenu className="gap-0.5">
+      <SidebarFooter className="px-2 pb-3 pt-2 border-t border-sidebar-border/50">
+        <SidebarMenu className="gap-px">
           {footerItems.map((item) => (
             <NavItem
               key={item.title}
