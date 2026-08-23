@@ -7,6 +7,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 
 // ─── Breadcrumb config ────────────────────────────────────
 
@@ -37,7 +38,8 @@ export function Header({ onSearchClick }: HeaderProps) {
       {/* Left — trigger + page title */}
       <div className="flex items-center gap-3 min-w-0">
         <SidebarTrigger className="size-8 shrink-0 rounded-lg hover:bg-accent transition-colors" />
-        <span className="text-sm font-semibold text-foreground truncate hidden sm:block">
+        <Separator orientation="vertical" className="h-4 hidden sm:block" />
+        <span className="text-sm font-medium text-foreground/80 truncate hidden sm:block">
           {pageTitle}
         </span>
       </div>
