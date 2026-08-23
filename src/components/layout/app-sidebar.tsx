@@ -129,7 +129,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r-0">
       {/* Logo */}
-      <SidebarHeader className="h-14 px-4 border-b border-sidebar-border/50 flex items-center">
+      <SidebarHeader className="h-14 px-4 border-b border-sidebar-border/50 flex flex-row items-center">
         <Link href="/" className="flex items-center w-full group">
           <span className="font-bold text-sm tracking-tight text-sidebar-foreground">
             L3XIS
