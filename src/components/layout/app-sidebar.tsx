@@ -95,11 +95,14 @@ interface NavGroupProps {
 function NavGroup({ label, items, pathname, isCollapsed }: NavGroupProps) {
   return (
     <SidebarGroup className="py-0">
-      {!isCollapsed && (
-        <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 h-7">
-          {label}
-        </SidebarGroupLabel>
-      )}
+      <SidebarGroupLabel
+        className={[
+          "text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 overflow-hidden transition-all duration-200 ease-in-out",
+          isCollapsed ? "h-0 opacity-0 mb-0" : "h-7 opacity-100",
+        ].join(" ")}
+      >
+        {label}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu className="gap-px">
           {items.map((item) => (
