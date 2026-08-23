@@ -3,7 +3,6 @@
 import * as React from "react"
 import { motion, type Variants } from "framer-motion"
 import {
-  Sparkles,
   BookOpen,
   Flame,
   Trophy,
@@ -21,11 +20,11 @@ import { AddWordModal } from "@/components/vocabulary/add-word-modal"
 // ─── Animation variants ───────────────────────────────────
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" as const },
+    transition: { delay: i * 0.05, duration: 0.35, ease: "easeOut" as const },
   }),
 }
 
@@ -35,27 +34,27 @@ interface StatCardProps {
   label: string
   value: string | number
   icon: React.ElementType
-  accent: string
+  iconBg: string
+  iconColor: string
   index: number
 }
 
-function StatCard({ label, value, icon: Icon, accent, index }: StatCardProps) {
+function StatCard({ label, value, icon: Icon, iconBg, iconColor, index }: StatCardProps) {
   return (
     <motion.div
       custom={index}
       initial="hidden"
       animate="visible"
       variants={fadeUp}
-      className="relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-5 overflow-hidden group hover:border-border hover:shadow-md transition-all duration-300"
+      className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-5 hover:border-border hover:shadow-sm transition-all duration-200"
     >
-      <div className={`size-10 rounded-xl flex items-center justify-center ${accent}`}>
-        <Icon className="size-5" />
+      <div className={`size-9 rounded-lg flex items-center justify-center ${iconBg}`}>
+        <Icon className={`size-4 ${iconColor}`} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-foreground tabular-nums">{value}</p>
+        <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
       </div>
-      <div className={`absolute -right-4 -bottom-4 size-20 rounded-full opacity-5 ${accent}`} />
     </motion.div>
   )
 }
@@ -64,33 +63,25 @@ function StatCard({ label, value, icon: Icon, accent, index }: StatCardProps) {
 
 interface StudyCardProps {
   title: string
-  description: string
   icon: React.ElementType
   href: string
-  gradient: string
+  iconBg: string
+  iconColor: string
   index: number
 }
 
-function StudyCard({ title, description, icon: Icon, href, gradient, index }: StudyCardProps) {
+function StudyCard({ title, icon: Icon, href, iconBg, iconColor, index }: StudyCardProps) {
   return (
-    <motion.div
-      custom={index}
-      initial="hidden"
-      animate="visible"
-      variants={fadeUp}
-    >
+    <motion.div custom={index} initial="hidden" animate="visible" variants={fadeUp}>
       <Link
         href={href}
-        className="group flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-4 hover:border-border hover:shadow-md transition-all duration-300"
+        className="group flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 hover:border-border hover:shadow-sm transition-all duration-200"
       >
-        <div className={`size-11 rounded-xl flex items-center justify-center shrink-0 ${gradient}`}>
-          <Icon className="size-5 text-white" />
+        <div className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+          <Icon className={`size-4 ${iconColor}`} />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">{title}</p>
-          <p className="text-xs text-muted-foreground truncate">{description}</p>
-        </div>
-        <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
+        <span className="text-sm font-medium text-foreground flex-1">{title}</span>
+        <ArrowRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150 shrink-0" />
       </Link>
     </motion.div>
   )
@@ -98,26 +89,28 @@ function StudyCard({ title, description, icon: Icon, href, gradient, index }: St
 
 // ─── Word Chip ────────────────────────────────────────────
 
+const MASTERY_BADGE = [
+  "bg-muted text-muted-foreground",
+  "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  "bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400",
+  "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+  "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400",
+]
+
+const MASTERY_LABELS = ["New", "Beginner", "Learning", "Familiar", "Mastered"]
+
 function WordChip({ word, phonetic, definition, masteryLevel }: {
   word: string
   phonetic: string
   definition: string
   masteryLevel: number
 }) {
-  const MASTERY_COLORS = [
-    "bg-muted text-muted-foreground",
-    "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-    "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-    "bg-green-500/10 text-green-600 dark:text-green-400",
-  ]
-
   return (
-    <div className="group flex flex-col gap-1.5 rounded-xl border border-border/50 bg-card p-3.5 hover:border-border hover:shadow-sm transition-all duration-200 cursor-pointer">
+    <div className="flex flex-col gap-1.5 rounded-xl border border-border/60 bg-card p-3.5 hover:border-border hover:shadow-sm transition-all duration-150 cursor-pointer">
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-semibold text-foreground">{word}</span>
-        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${MASTERY_COLORS[masteryLevel]}`}>
-          {["New", "Beginner", "Learning", "Familiar", "Mastered"][masteryLevel]}
+        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${MASTERY_BADGE[masteryLevel]}`}>
+          {MASTERY_LABELS[masteryLevel]}
         </span>
       </div>
       <span className="text-xs font-mono text-muted-foreground">{phonetic}</span>
@@ -136,42 +129,69 @@ export default function HomePage() {
   const totalWords = words.length
   const masteredCount = words.filter((w) => w.masteryLevel >= 3).length
 
-  const stats = [
-    { label: "Total Words", value: totalWords, icon: BookOpen, accent: "bg-primary/10 text-primary" },
-    { label: "Learned Today", value: 3, icon: TrendingUp, accent: "bg-green-500/10 text-green-600 dark:text-green-400" },
-    { label: "Day Streak", value: "7 🔥", icon: Flame, accent: "bg-orange-500/10 text-orange-600 dark:text-orange-400" },
-    { label: "Mastered", value: masteredCount, icon: Trophy, accent: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+  const stats: StatCardProps[] = [
+    {
+      label: "Total Words", value: totalWords, icon: BookOpen, index: 0,
+      iconBg: "bg-blue-50 dark:bg-blue-500/10",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Learned Today", value: 3, icon: TrendingUp, index: 1,
+      iconBg: "bg-green-50 dark:bg-green-500/10",
+      iconColor: "text-green-600 dark:text-green-400",
+    },
+    {
+      label: "Day Streak", value: "7 🔥", icon: Flame, index: 2,
+      iconBg: "bg-yellow-50 dark:bg-yellow-500/10",
+      iconColor: "text-yellow-600 dark:text-yellow-400",
+    },
+    {
+      label: "Mastered", value: masteredCount, icon: Trophy, index: 3,
+      iconBg: "bg-red-50 dark:bg-red-500/10",
+      iconColor: "text-red-500 dark:text-red-400",
+    },
   ]
 
-  const studyModes = [
-    { title: "Flashcards", description: "Review with spaced repetition", icon: CreditCard, href: "/study/flashcards", gradient: "gradient-primary" },
-    { title: "Flip Cards", description: "Flip to reveal meaning", icon: Zap, href: "/study/flip", gradient: "bg-gradient-to-br from-violet-500 to-purple-600" },
-    { title: "Word Match", description: "Match words to definitions", icon: Trophy, href: "/study/match", gradient: "bg-gradient-to-br from-emerald-500 to-teal-600" },
-    { title: "Games", description: "Fun vocabulary challenges", icon: Gamepad2, href: "/study/games", gradient: "bg-gradient-to-br from-orange-500 to-rose-500" },
+  const studyModes: StudyCardProps[] = [
+    {
+      title: "Flashcards", icon: CreditCard, href: "/study/flashcards", index: 4,
+      iconBg: "bg-blue-50 dark:bg-blue-500/10",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      title: "Flip Cards", icon: Zap, href: "/study/flip", index: 5,
+      iconBg: "bg-yellow-50 dark:bg-yellow-500/10",
+      iconColor: "text-yellow-600 dark:text-yellow-400",
+    },
+    {
+      title: "Word Match", icon: Trophy, href: "/study/match", index: 6,
+      iconBg: "bg-green-50 dark:bg-green-500/10",
+      iconColor: "text-green-600 dark:text-green-400",
+    },
+    {
+      title: "Games", icon: Gamepad2, href: "/study/games", index: 7,
+      iconBg: "bg-red-50 dark:bg-red-500/10",
+      iconColor: "text-red-500 dark:text-red-400",
+    },
   ]
 
   return (
     <>
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-7">
         {/* Greeting */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="space-y-1"
+          transition={{ duration: 0.3 }}
+          className="text-xl font-bold text-foreground"
         >
-          <h1 className="text-2xl font-bold text-foreground">
-            Good evening 👋
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Ready to expand your vocabulary today?
-          </p>
-        </motion.div>
+          Good evening 👋
+        </motion.h1>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map((s, i) => (
-            <StatCard key={s.label} {...s} index={i} />
+          {stats.map((s) => (
+            <StatCard key={s.label} {...s} />
           ))}
         </div>
 
@@ -181,29 +201,20 @@ export default function HomePage() {
           initial="hidden"
           animate="visible"
           variants={fadeUp}
-          className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-5"
+          className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4"
         >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="size-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-                <Sparkles className="size-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-foreground">Add a new word</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  AI generates definition, examples & synonyms instantly
-                </p>
-              </div>
-            </div>
-            <button
-              id="add-word-button"
-              onClick={() => setAddModalOpen(true)}
-              className="flex items-center gap-2 h-9 px-4 rounded-xl gradient-primary text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all duration-150 shrink-0 whitespace-nowrap"
-            >
-              <Plus className="size-4" />
-              Add Word
-            </button>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Add a word</p>
+            <p className="text-xs text-muted-foreground mt-0.5">AI generates meaning instantly</p>
           </div>
+          <button
+            id="add-word-button"
+            onClick={() => setAddModalOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 active:scale-95 transition-all duration-150 shrink-0 whitespace-nowrap"
+          >
+            <Plus className="size-3.5" />
+            Add
+          </button>
         </motion.div>
 
         {/* Recent Words */}
@@ -217,24 +228,15 @@ export default function HomePage() {
           >
             <div className="flex items-center justify-between mb-3">
               <h2 id="recent-words-heading" className="text-sm font-semibold text-foreground">
-                Recent Words
+                Recent
               </h2>
-              <Link
-                href="/vocabulary"
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
+              <Link href="/vocabulary" className="flex items-center gap-1 text-xs text-primary hover:underline">
                 See all <ArrowRight className="size-3" />
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {recentWords.map((w, i) => (
-                <motion.div
-                  key={w.id}
-                  custom={5 + i}
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                >
+                <motion.div key={w.id} custom={5 + i} initial="hidden" animate="visible" variants={fadeUp}>
                   <WordChip
                     word={w.word}
                     phonetic={w.phonetic}
@@ -256,11 +258,11 @@ export default function HomePage() {
           aria-labelledby="study-modes-heading"
         >
           <h2 id="study-modes-heading" className="text-sm font-semibold text-foreground mb-3">
-            Study Modes
+            Study
           </h2>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {studyModes.map((m, i) => (
-              <StudyCard key={m.title} {...m} index={11 + i} />
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            {studyModes.map((m) => (
+              <StudyCard key={m.title} {...m} />
             ))}
           </div>
         </motion.section>
@@ -269,11 +271,11 @@ export default function HomePage() {
       {/* FAB — mobile */}
       <button
         onClick={() => setAddModalOpen(true)}
-        className="fixed bottom-6 right-6 sm:hidden size-14 rounded-full gradient-primary text-white shadow-xl hover:opacity-90 active:scale-95 transition-all duration-150 flex items-center justify-center glow-primary z-40"
+        className="fixed bottom-6 right-6 sm:hidden size-13 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all duration-150 flex items-center justify-center z-40"
         aria-label="Add new word"
         id="fab-add-word"
       >
-        <Plus className="size-6" />
+        <Plus className="size-5" />
       </button>
 
       <AddWordModal open={addModalOpen} onClose={() => setAddModalOpen(false)} />
