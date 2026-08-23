@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, Loader2, ChevronRight, X, BookOpen, Check } from "lucide-react"
+import { Sparkles, Loader2, ChevronRight, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useVocabStore, type VocabWord } from "@/store/vocab-store"
@@ -47,64 +47,34 @@ async function mockGenerateWordData(word: string): Promise<GeneratedWordData> {
   }
 }
 
-// ─── Sub-components ───────────────────────────────────────
+// ─── Word Preview ─────────────────────────────────────────
 
-function StepIndicator({ step }: { step: Step }) {
-  const steps: Step[] = ["input", "preview", "saved"]
-  const idx = steps.indexOf(step === "loading" ? "preview" : step)
-
-  return (
-    <div className="flex items-center gap-1.5">
-      {steps.slice(0, 2).map((s, i) => (
-        <React.Fragment key={s}>
-          <div
-            className={[
-              "size-1.5 rounded-full transition-all duration-300",
-              i <= idx ? "bg-primary" : "bg-border",
-            ].join(" ")}
-          />
-          {i < 1 && <div className={["h-px w-4 transition-all duration-300", i < idx ? "bg-primary" : "bg-border"].join(" ")} />}
-        </React.Fragment>
-      ))}
-    </div>
-  )
-}
-
-interface WordPreviewProps {
-  data: GeneratedWordData
-}
-
-function WordPreview({ data }: WordPreviewProps) {
+function WordPreview({ data }: { data: GeneratedWordData }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      {/* Word header */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-2xl font-bold text-foreground">{data.word}</h3>
-          <p className="text-sm text-muted-foreground font-mono">{data.phonetic}</p>
+          <h3 className="text-xl font-bold text-foreground">{data.word}</h3>
+          <p className="text-sm text-muted-foreground font-mono mt-0.5">{data.phonetic}</p>
         </div>
-        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 shrink-0">
           {data.partOfSpeech}
         </span>
       </div>
 
       {/* Definition */}
-      <div className="p-3.5 rounded-xl bg-muted/50 border border-border/50">
-        <p className="text-sm text-foreground leading-relaxed">{data.definition}</p>
-      </div>
+      <p className="text-sm text-foreground/85 leading-relaxed">{data.definition}</p>
 
       {/* Examples */}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Examples
-        </p>
+      <div className="space-y-2.5">
         {data.examples.map((ex, i) => (
-          <div key={i} className="pl-3 border-l-2 border-primary/30 space-y-0.5">
-            <p className="text-sm text-foreground italic">&ldquo;{ex.sentence}&rdquo;</p>
+          <div key={i} className="pl-3 border-l-2 border-border space-y-0.5">
+            <p className="text-xs text-foreground/80 italic">&ldquo;{ex.sentence}&rdquo;</p>
             <p className="text-xs text-muted-foreground">{ex.translation}</p>
           </div>
         ))}
@@ -112,9 +82,8 @@ function WordPreview({ data }: WordPreviewProps) {
 
       {/* Synonyms */}
       <div className="flex flex-wrap gap-1.5">
-        <span className="text-xs text-muted-foreground self-center">Synonyms:</span>
         {data.synonyms.map((s) => (
-          <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-accent text-accent-foreground">
+          <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             {s}
           </span>
         ))}
@@ -138,7 +107,6 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const addWord = useVocabStore((s) => s.addWord)
 
-  // Focus input on open
   React.useEffect(() => {
     if (open) {
       setStep("input")
@@ -152,7 +120,7 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
   const handleGenerate = async () => {
     const trimmed = inputWord.trim()
     if (!trimmed) {
-      setError("Please enter a word first")
+      setError("Enter a word first")
       return
     }
     setError("")
@@ -162,7 +130,7 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
       setWordData(data)
       setStep("preview")
     } catch {
-      setError("Failed to generate. Please try again.")
+      setError("Something went wrong. Try again.")
       setStep("input")
     }
   }
@@ -171,7 +139,7 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
     if (!wordData) return
     addWord({ ...wordData, collection: "default" })
     setStep("saved")
-    setTimeout(onClose, 1200)
+    setTimeout(onClose, 1100)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -193,39 +161,28 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        initial={{ opacity: 0, scale: 0.97, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-md rounded-2xl border border-border/60 bg-card shadow-2xl overflow-hidden"
+        exit={{ opacity: 0, scale: 0.97, y: 10 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="relative w-full max-w-md rounded-2xl border border-border/70 bg-card shadow-xl overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/40">
-          <div className="flex items-center gap-2.5">
-            <div className="size-7 rounded-lg gradient-primary flex items-center justify-center">
-              <BookOpen className="size-3.5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold">Add Word</h2>
-              <p className="text-xs text-muted-foreground">AI-powered meaning inference</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <StepIndicator step={step} />
-            <button
-              onClick={onClose}
-              className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
+          <h2 className="text-sm font-semibold">Add Word</h2>
+          <button
+            onClick={onClose}
+            className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
         {/* Body */}
@@ -235,41 +192,29 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
             {step === "input" && (
               <motion.div
                 key="input"
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+                exit={{ opacity: 0, x: 8 }}
                 className="space-y-4"
               >
-                <div className="space-y-1.5">
-                  <label htmlFor="word-input" className="text-sm font-medium text-foreground">
-                    English word
-                  </label>
-                  <Input
-                    id="word-input"
-                    ref={inputRef}
-                    value={inputWord}
-                    onChange={(e) => setInputWord(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="e.g. ephemeral, serendipity..."
-                    className="h-11 rounded-xl border-border/60 bg-muted/30 focus:bg-background text-base"
-                  />
-                  {error && <p className="text-xs text-destructive">{error}</p>}
-                </div>
-
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-primary/5 border border-primary/15">
-                  <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    AI will generate the definition, pronunciation, examples in context, and synonyms automatically.
-                  </p>
-                </div>
+                <Input
+                  id="word-input"
+                  ref={inputRef}
+                  value={inputWord}
+                  onChange={(e) => setInputWord(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter an English word..."
+                  className="h-11 rounded-xl border-border/60 bg-muted/30 focus:bg-background text-sm"
+                />
+                {error && <p className="text-xs text-destructive -mt-2">{error}</p>}
 
                 <Button
                   onClick={handleGenerate}
                   disabled={!inputWord.trim()}
-                  className="w-full h-10 rounded-xl gradient-primary border-0 text-white font-medium hover:opacity-90 transition-opacity"
+                  className="w-full h-10 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                 >
                   <Sparkles className="size-4" />
-                  Generate with AI
+                  Generate
                   <ChevronRight className="size-4" />
                 </Button>
               </motion.div>
@@ -282,18 +227,12 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-10 gap-4"
+                className="flex flex-col items-center justify-center py-12 gap-3"
               >
-                <div className="relative size-12">
-                  <div className="absolute inset-0 rounded-full gradient-primary opacity-20 animate-ping" />
-                  <div className="size-12 rounded-full gradient-primary flex items-center justify-center">
-                    <Loader2 className="size-5 text-white animate-spin" />
-                  </div>
+                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Loader2 className="size-5 text-primary animate-spin" />
                 </div>
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-medium">Analyzing &ldquo;{inputWord}&rdquo;</p>
-                  <p className="text-xs text-muted-foreground">Generating definition and examples...</p>
-                </div>
+                <p className="text-sm text-muted-foreground">Looking up &ldquo;{inputWord}&rdquo;...</p>
               </motion.div>
             )}
 
@@ -301,26 +240,26 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
             {step === "preview" && wordData && (
               <motion.div
                 key="preview"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: -8 }}
                 className="space-y-5"
               >
                 <WordPreview data={wordData} />
-                <div className="flex gap-2.5">
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setStep("input")}
-                    className="flex-1 h-10 rounded-xl"
+                    className="flex-1 h-9 rounded-xl text-sm"
                   >
-                    Try another
+                    Back
                   </Button>
                   <Button
                     onClick={handleSave}
-                    className="flex-1 h-10 rounded-xl gradient-primary border-0 text-white hover:opacity-90 transition-opacity"
+                    className="flex-1 h-9 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm"
                   >
                     <Check className="size-4" />
-                    Save word
+                    Save
                   </Button>
                 </div>
               </motion.div>
@@ -330,17 +269,14 @@ export function AddWordModal({ open, onClose }: AddWordModalProps) {
             {step === "saved" && (
               <motion.div
                 key="saved"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-10 gap-3"
+                className="flex flex-col items-center justify-center py-12 gap-3"
               >
-                <div className="size-14 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
-                  <Check className="size-6 text-green-500" />
+                <div className="size-12 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+                  <Check className="size-5 text-green-600 dark:text-green-400" />
                 </div>
-                <div className="text-center">
-                  <p className="font-semibold text-foreground">Word saved!</p>
-                  <p className="text-sm text-muted-foreground">&ldquo;{wordData?.word}&rdquo; added to your vocabulary</p>
-                </div>
+                <p className="text-sm font-medium text-foreground">&ldquo;{wordData?.word}&rdquo; saved</p>
               </motion.div>
             )}
           </AnimatePresence>
