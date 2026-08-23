@@ -11,7 +11,6 @@ import {
   CreditCard,
   Zap,
   Trophy,
-  BookMarked,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -127,20 +126,11 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r-0">
       {/* Logo */}
-      <SidebarHeader className="h-14 px-3 border-b border-sidebar-border/50 flex items-center">
-        <Link href="/" className="flex items-center gap-2.5 w-full group min-w-0">
-          <div
-            className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary transition-colors duration-150 group-hover:bg-primary/25"
-            aria-hidden="true"
-          >
-            <BookMarked className="size-4" />
-          </div>
-
-          {!isCollapsed && (
-            <span className="font-bold text-sm tracking-tight text-sidebar-foreground truncate">
-              L3XIS
-            </span>
-          )}
+      <SidebarHeader className="h-14 px-4 border-b border-sidebar-border/50 flex items-center">
+        <Link href="/" className="flex items-center w-full group">
+          <span className="font-bold text-sm tracking-tight text-sidebar-foreground">
+            L3XIS
+          </span>
         </Link>
       </SidebarHeader>
 
