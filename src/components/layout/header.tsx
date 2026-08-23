@@ -15,9 +15,6 @@ export function Header() {
         
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            L
-          </div>
           <span className="text-xl font-bold tracking-tight">L3XIS</span>
         </Link>
       </div>
