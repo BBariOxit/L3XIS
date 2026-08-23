@@ -1,42 +1,53 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Monitor } from "lucide-react"
 import { useTheme } from "next-themes"
-
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
+const THEMES = ["light", "dark", "system"] as const
+type Theme = (typeof THEMES)[number]
+
+const ICONS: Record<Theme, React.ElementType> = {
+  light: Sun,
+  dark: Moon,
+  system: Monitor,
+}
 
 export function ModeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => setMounted(true), [])
+
+  const cycleTheme = () => {
+    const current = (theme ?? "system") as Theme
+    const idx = THEMES.indexOf(current)
+    const next = THEMES[(idx + 1) % THEMES.length]
+    setTheme(next)
+  }
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="rounded-full size-9" disabled aria-label="Toggle theme">
+        <span className="size-4 rounded-full bg-muted animate-pulse" />
+      </Button>
+    )
+  }
+
+  const current = (theme ?? "system") as Theme
+  const Icon = ICONS[current]
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Sáng
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Tối
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          Hệ thống
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={cycleTheme}
+      className="rounded-full size-9 relative overflow-hidden hover:bg-accent transition-colors duration-200"
+      aria-label={`Current theme: ${current}. Click to switch.`}
+      title={`Theme: ${current}`}
+    >
+      <Icon className="size-4 transition-all duration-300" />
+    </Button>
   )
 }

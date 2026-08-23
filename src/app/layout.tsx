@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { Header } from "@/components/layout/header";
+import { AppShell } from "@/components/layout/app-shell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "L3XIS - Vocabulary Learning App",
-  description: "Learn and practice your English vocabulary",
+  title: "L3XIS — Vocabulary Mastery",
+  description: "Add, learn, and master English vocabulary with AI-powered meaning inference and spaced repetition.",
 };
 
 export default function RootLayout({
@@ -41,12 +41,7 @@ export default function RootLayout({
               <div className="flex h-screen w-full overflow-hidden">
                 <AppSidebar />
                 <SidebarInset className="flex flex-1 flex-col overflow-hidden w-full">
-                  <Header />
-                  <main className="flex-1 overflow-y-auto bg-muted/20">
-                    <div className="container mx-auto p-6 md:p-8">
-                      {children}
-                    </div>
-                  </main>
+                  <AppShell>{children}</AppShell>
                 </SidebarInset>
               </div>
             </SidebarProvider>

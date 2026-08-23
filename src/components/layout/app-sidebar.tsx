@@ -1,7 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Home, BookOpen, Gamepad2, Settings, User, Library, Sparkles } from "lucide-react"
+import {
+  Home,
+  BookOpen,
+  Layers,
+  Gamepad2,
+  Settings,
+  User,
+  CreditCard,
+  Zap,
+  Trophy,
+} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -16,115 +26,129 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
-// Danh sách các mục menu chính
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "My Vocabulary",
-    url: "/vocabulary",
-    icon: BookOpen,
-  },
-  {
-    title: "Collections",
-    url: "/collections",
-    icon: Library,
-  },
-  {
-    title: "Practice & Games",
-    url: "/practice",
-    icon: Gamepad2,
-  },
+// ─── Navigation config ────────────────────────────────────
+
+const mainItems = [
+  { title: "Home", url: "/", icon: Home },
+  { title: "Vocabulary", url: "/vocabulary", icon: BookOpen },
+  { title: "Collections", url: "/collections", icon: Layers },
 ]
 
-// Các mục cài đặt
-const settingsItems = [
-  {
-    title: "Profile",
-    url: "/profile",
-    icon: User,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
+const studyItems = [
+  { title: "Flashcards", url: "/study/flashcards", icon: CreditCard },
+  { title: "Flip Cards", url: "/study/flip", icon: Zap },
+  { title: "Word Match", url: "/study/match", icon: Trophy },
+  { title: "Games", url: "/study/games", icon: Gamepad2 },
 ]
+
+const footerItems = [
+  { title: "Profile", url: "/profile", icon: User },
+  { title: "Settings", url: "/settings", icon: Settings },
+]
+
+// ─── Sub-components ───────────────────────────────────────
+
+interface NavItemProps {
+  title: string
+  url: string
+  icon: React.ElementType
+  isActive: boolean
+  isCollapsed: boolean
+}
+
+function NavItem({ title, url, icon: Icon, isActive, isCollapsed }: NavItemProps) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<Link href={url} />}
+        isActive={isActive}
+        title={isCollapsed ? title : undefined}
+        className={[
+          "h-9 px-2.5 rounded-lg transition-colors duration-150 group",
+          isActive
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+        ].join(" ")}
+      >
+        <Icon
+          className={[
+            "size-4 shrink-0",
+            isActive ? "text-primary" : "opacity-55 group-hover:opacity-90",
+          ].join(" ")}
+        />
+        <span className="text-sm">{title}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
+interface NavGroupProps {
+  label: string
+  items: typeof mainItems
+  pathname: string
+  isCollapsed: boolean
+}
+
+function NavGroup({ label, items, pathname, isCollapsed }: NavGroupProps) {
+  return (
+    <SidebarGroup className="py-0">
+      <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 transition-all duration-200">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu className="gap-px">
+          {items.map((item) => (
+            <NavItem
+              key={item.title}
+              {...item}
+              isActive={pathname === item.url}
+              isCollapsed={isCollapsed}
+            />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
 
   return (
-    <Sidebar variant="inset" className="border-r-0">
-      <SidebarHeader className="h-16 flex items-center justify-center px-4 border-b border-sidebar-border/50">
-        <Link href="/" className="flex items-center gap-2 w-full">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <Sparkles className="size-5" />
-          </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-semibold text-base tracking-tight">L3XIS</span>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Vocab Mastery</span>
-          </div>
+    <Sidebar variant="inset" collapsible="icon" className="border-r-0">
+      {/* Logo */}
+      <SidebarHeader className="h-14 px-4 border-b border-sidebar-border/50 flex flex-row items-center">
+        <Link href="/" className="flex items-center w-full group">
+          <span className="font-bold text-sm tracking-tight text-sidebar-foreground">
+            L3XIS
+          </span>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4 flex flex-col gap-6">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-2 px-2">
-            Learning
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {mainNavItems.map((item) => {
-                const isActive = pathname === item.url
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      render={<Link href={item.url} />}
-                      isActive={isActive}
-                      className={`h-10 px-3 rounded-xl transition-all duration-200 ${
-                        isActive 
-                          ? "bg-primary/10 text-primary font-medium" 
-                          : "text-sidebar-foreground/80"
-                      }`}
-                    >
-                      <item.icon className={`size-5 ${isActive ? "text-primary" : "opacity-70"}`} />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {/* Nav */}
+      <SidebarContent className="px-2 py-3 flex flex-col gap-3 overflow-y-auto">
+        <NavGroup label="General" items={mainItems} pathname={pathname} isCollapsed={isCollapsed} />
+        <NavGroup label="Study" items={studyItems} pathname={pathname} isCollapsed={isCollapsed} />
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border/50">
-        <SidebarMenu className="gap-1.5">
-          {settingsItems.map((item) => {
-            const isActive = pathname === item.url
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  render={<Link href={item.url} />}
-                  isActive={isActive}
-                  className={`h-10 px-3 rounded-xl transition-all duration-200 ${
-                    isActive 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "text-sidebar-foreground/80"
-                  }`}
-                >
-                  <item.icon className={`size-5 ${isActive ? "text-primary" : "opacity-70"}`} />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
+      {/* Footer */}
+      <SidebarFooter className="px-2 pb-3 pt-2 border-t border-sidebar-border/50">
+        <SidebarMenu className="gap-px">
+          {footerItems.map((item) => (
+            <NavItem
+              key={item.title}
+              {...item}
+              isActive={pathname === item.url}
+              isCollapsed={isCollapsed}
+            />
+          ))}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
