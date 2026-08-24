@@ -123,7 +123,19 @@ function WordChip({ word, phonetic, definition, masteryLevel }: {
 
 export default function HomePage() {
   const [addModalOpen, setAddModalOpen] = React.useState(false)
+  const [greeting, setGreeting] = React.useState("Welcome back")
+  const [learnedToday, setLearnedToday] = React.useState(0)
   const words = useVocabStore((s) => s.words)
+
+  React.useEffect(() => {
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting("Good morning")
+    else if (hour < 18) setGreeting("Good afternoon")
+    else setGreeting("Good evening")
+
+    const today = new Date().toDateString()
+    setLearnedToday(words.filter((w) => new Date(w.addedAt).toDateString() === today).length)
+  }, [words])
 
   const recentWords = words.slice(0, 6)
   const totalWords = words.length
@@ -136,7 +148,7 @@ export default function HomePage() {
       iconColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: "Learned Today", value: 3, icon: TrendingUp, index: 1,
+      label: "Learned Today", value: learnedToday, icon: TrendingUp, index: 1,
       iconBg: "bg-green-50 dark:bg-green-500/10",
       iconColor: "text-green-600 dark:text-green-400",
     },
@@ -185,7 +197,7 @@ export default function HomePage() {
           transition={{ duration: 0.3 }}
           className="text-xl font-bold text-foreground"
         >
-          Good evening 👋
+          {greeting} 👋
         </motion.h1>
 
         {/* Stats */}
@@ -204,8 +216,8 @@ export default function HomePage() {
           className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card p-4"
         >
           <div>
-            <p className="text-sm font-semibold text-foreground">Add a word</p>
-            <p className="text-xs text-muted-foreground mt-0.5">AI generates meaning instantly</p>
+            <p className="text-sm font-semibold text-foreground">Add new word</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Build your vocabulary, one word at a time</p>
           </div>
           <button
             id="add-word-button"
