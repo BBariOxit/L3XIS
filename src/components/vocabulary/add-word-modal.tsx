@@ -2,142 +2,97 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  Sparkles,
-  Loader2,
-  ChevronRight,
-  X,
-  Check,
-  Volume2,
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Loader2, X, Check, Volume2, RefreshCw, AlertCircle, ArrowRight } from "lucide-react"
 import { useVocabStore, type VocabWord } from "@/store/vocab-store"
 import type { GeneratedWordData } from "@/app/api/generate/route"
 
-// ─── Re-export type for consumers ─────────────────────────
 export type { GeneratedWordData }
 
-// ─── Step machine ─────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────
 
 type Step = "input" | "loading" | "preview" | "saving" | "saved" | "error"
 
-// ─── Web Speech API ───────────────────────────────────────
+// ─── Speak ────────────────────────────────────────────────
 
 function speak(text: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return
   window.speechSynthesis.cancel()
-  const utt = new SpeechSynthesisUtterance(text)
-  utt.lang = "en-US"
-  utt.rate = 0.9
-  window.speechSynthesis.speak(utt)
+  const u = new SpeechSynthesisUtterance(text)
+  u.lang = "en-US"
+  u.rate = 0.9
+  window.speechSynthesis.speak(u)
 }
 
-// ─── Mastery badge helpers ────────────────────────────────
+// ─── POS colour ───────────────────────────────────────────
 
-const POS_COLORS: Record<string, string> = {
-  noun: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400",
-  verb: "bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-400",
-  adjective: "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400",
-  adverb: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
-  preposition: "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400",
+const POS_COLOR: Record<string, string> = {
+  noun:        "bg-blue-500/10   text-blue-500",
+  verb:        "bg-green-500/10  text-green-600 dark:text-green-400",
+  adjective:   "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  adverb:      "bg-amber-500/10  text-amber-600 dark:text-amber-400",
+  preposition: "bg-rose-500/10   text-rose-600 dark:text-rose-400",
 }
+const posColor = (p: string) =>
+  POS_COLOR[p.toLowerCase()] ?? "bg-muted text-muted-foreground"
 
-function posColor(pos: string) {
-  return (
-    POS_COLORS[pos.toLowerCase()] ??
-    "bg-muted text-muted-foreground"
-  )
-}
+// ─── Preview ──────────────────────────────────────────────
 
-// ─── Word Preview ─────────────────────────────────────────
-
-interface WordPreviewProps {
-  data: GeneratedWordData
-}
-
-function WordPreview({ data }: WordPreviewProps) {
-  const [speaking, setSpeaking] = React.useState(false)
-
-  const handleSpeak = () => {
-    setSpeaking(true)
-    speak(data.word)
-    setTimeout(() => setSpeaking(false), 1200)
-  }
+function WordPreview({ data }: { data: GeneratedWordData }) {
+  const [active, setActive] = React.useState(false)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-5"
     >
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
+      {/* Word + phonetic + speak */}
+      <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-2xl font-bold text-foreground tracking-tight">
-              {data.word}
-            </h3>
-            {/* 🔊 Speak button */}
-            <button
-              id="speak-word-btn"
-              onClick={handleSpeak}
-              title="Listen to pronunciation"
-              className={`size-7 rounded-full flex items-center justify-center transition-all duration-150 shrink-0
-                ${speaking
-                  ? "bg-primary text-primary-foreground scale-110"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-            >
-              <Volume2 className="size-3.5" />
-            </button>
-          </div>
+          <h3 className="text-2xl font-bold tracking-tight text-foreground capitalize">
+            {data.word}
+          </h3>
           <p className="text-sm font-mono text-muted-foreground mt-0.5">
             {data.phonetic}
           </p>
         </div>
-        <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 mt-1 ${posColor(data.partOfSpeech)}`}
-        >
-          {data.partOfSpeech}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${posColor(data.partOfSpeech)}`}>
+            {data.partOfSpeech}
+          </span>
+          <button
+            id="speak-word-btn"
+            onClick={() => { setActive(true); speak(data.word); setTimeout(() => setActive(false), 1000) }}
+            className={`size-8 rounded-full flex items-center justify-center transition-all duration-150
+              ${active ? "bg-primary text-primary-foreground scale-110" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+          >
+            <Volume2 className="size-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* Definitions */}
-      <div className="space-y-2 rounded-xl bg-muted/40 p-4 border border-border/50">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-            English
-          </p>
-          <p className="text-sm text-foreground leading-relaxed">
-            {data.definition}
-          </p>
-        </div>
+      {/* Definition EN → VI */}
+      <div className="space-y-2">
+        <p className="text-sm leading-relaxed text-foreground">{data.definition}</p>
         {data.definitionVi && (
-          <div className="pt-2 border-t border-border/40">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-              Tiếng Việt
-            </p>
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {data.definitionVi}
-            </p>
-          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/30 pl-3">
+            {data.definitionVi}
+          </p>
         )}
       </div>
 
-      {/* Examples */}
+      {/* Examples by context */}
       {data.examples.length > 0 && (
         <div className="space-y-3">
           {data.examples.map((ex, i) => (
-            <div key={i} className="pl-3.5 border-l-2 border-primary/30 space-y-1">
-              <p className="text-sm text-foreground/85 italic leading-relaxed">
-                &ldquo;{ex.sentence}&rdquo;
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {ex.translation}
-              </p>
+            <div key={i} className="rounded-lg bg-muted/40 px-4 py-3 space-y-1">
+              <p className="text-sm text-foreground/85 italic">&ldquo;{ex.sentence}&rdquo;</p>
+              <p className="text-xs text-muted-foreground">{ex.translation}</p>
+              {ex.context && (
+                <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground mt-1">
+                  {ex.context}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -145,40 +100,30 @@ function WordPreview({ data }: WordPreviewProps) {
 
       {/* Synonyms */}
       {data.synonyms.length > 0 && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-            Synonyms
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {data.synonyms.map((s) => (
-              <span
-                key={s}
-                className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border/50 hover:border-border transition-colors"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-1.5">
+          {data.synonyms.map((s) => (
+            <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+              {s}
+            </span>
+          ))}
         </div>
       )}
     </motion.div>
   )
 }
 
-// ─── Generate function (calls /api/generate) ──────────────
+// ─── API helpers ──────────────────────────────────────────
 
-async function generateWordData(word: string): Promise<GeneratedWordData> {
+async function generateWord(word: string): Promise<GeneratedWordData> {
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ word }),
   })
   const json = await res.json()
-  if (!res.ok) throw new Error(json.error ?? "Generation failed")
+  if (!res.ok) throw new Error(json.error ?? "Failed")
   return json as GeneratedWordData
 }
-
-// ─── Save function (calls /api/words) ────────────────────
 
 async function saveWord(data: GeneratedWordData): Promise<VocabWord> {
   const res = await fetch("/api/words", {
@@ -187,281 +132,173 @@ async function saveWord(data: GeneratedWordData): Promise<VocabWord> {
     body: JSON.stringify(data),
   })
   const json = await res.json()
-  if (!res.ok) throw new Error(json.error ?? "Save failed")
+  if (!res.ok) throw new Error(json.error ?? "Failed")
   return json.word as VocabWord
 }
 
-// ─── Main Component ───────────────────────────────────────
+// ─── Modal ────────────────────────────────────────────────
 
-interface AddWordModalProps {
+interface Props {
   open: boolean
   onClose: () => void
 }
 
-export function AddWordModal({ open, onClose }: AddWordModalProps) {
+export function AddWordModal({ open, onClose }: Props) {
   const [step, setStep] = React.useState<Step>("input")
-  const [inputWord, setInputWord] = React.useState("")
-  const [wordData, setWordData] = React.useState<GeneratedWordData | null>(null)
+  const [input, setInput] = React.useState("")
+  const [data, setData] = React.useState<GeneratedWordData | null>(null)
   const [error, setError] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
   const addWord = useVocabStore((s) => s.addWord)
 
-  // Reset on open
   React.useEffect(() => {
     if (open) {
-      setStep("input")
-      setInputWord("")
-      setWordData(null)
-      setError("")
+      setStep("input"); setInput(""); setData(null); setError("")
       setTimeout(() => inputRef.current?.focus(), 60)
     }
   }, [open])
 
-  const handleGenerate = async () => {
-    const trimmed = inputWord.trim()
-    if (!trimmed) {
-      setError("Please enter an English word first")
-      return
-    }
-    setError("")
+  const generate = async () => {
+    const w = input.trim()
+    if (!w) return
     setStep("loading")
-    try {
-      const data = await generateWordData(trimmed)
-      setWordData(data)
-      setStep("preview")
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong"
-      setError(msg)
-      setStep("error")
-    }
+    try { setData(await generateWord(w)); setStep("preview") }
+    catch (e) { setError(e instanceof Error ? e.message : "Error"); setStep("error") }
   }
 
-  const handleSave = async () => {
-    if (!wordData) return
+  const save = async () => {
+    if (!data) return
     setStep("saving")
     try {
-      const saved = await saveWord(wordData)
-      // Optimistic update to store with server id
-      addWord({ ...wordData, collection: saved.collection ?? "default" })
+      const saved = await saveWord(data)
+      addWord({ ...data, collection: saved.collection ?? "default" })
       setStep("saved")
-      setTimeout(onClose, 1200)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to save"
-      setError(msg)
-      setStep("error")
-    }
-  }
-
-  const handleRetry = () => {
-    setStep("input")
-    setError("")
-    setWordData(null)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && step === "input") handleGenerate()
-    if (e.key === "Escape") onClose()
+      setTimeout(onClose, 1100)
+    } catch (e) { setError(e instanceof Error ? e.message : "Error"); setStep("error") }
   }
 
   if (!open) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Add new word"
-    >
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      role="dialog" aria-modal="true">
       {/* Backdrop */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Sheet / dialog */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ type: "spring", damping: 30, stiffness: 350 }}
-        className="relative w-full max-w-md rounded-2xl border border-border/60 bg-card shadow-2xl overflow-hidden"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ type: "spring", damping: 32, stiffness: 380 }}
+        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl bg-card border border-border/50 shadow-2xl overflow-hidden"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/40">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Add Word</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Type an English word — AI will do the rest
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
+        {/* Drag handle (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        {/* Body */}
-        <div className="p-6">
+        {/* Close */}
+        <button onClick={onClose}
+          className="absolute top-4 right-4 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label="Close">
+          <X className="size-4" />
+        </button>
+
+        <div className="px-6 pb-8 pt-4 sm:pt-6">
           <AnimatePresence mode="wait">
 
-            {/* ── Step: Input ── */}
+            {/* ── Input ── */}
             {step === "input" && (
-              <motion.div
-                key="input"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="space-y-4"
-              >
-                <Input
+              <motion.div key="input"
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
+                className="space-y-3">
+                <input
                   id="word-input"
                   ref={inputRef}
-                  value={inputWord}
-                  onChange={(e) => {
-                    setInputWord(e.target.value)
-                    if (error) setError("")
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="e.g. ephemeral, serendipity..."
-                  className="h-12 rounded-xl text-base border-border/60 bg-muted/30 focus:bg-background transition-colors"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") generate(); if (e.key === "Escape") onClose() }}
+                  placeholder="Enter a word..."
+                  className="w-full h-14 px-4 rounded-xl text-lg bg-muted/40 border border-border/50 focus:border-primary/60 focus:bg-background text-foreground placeholder:text-muted-foreground outline-none transition-all"
                 />
-                {error && (
-                  <p className="flex items-center gap-1.5 text-sm text-destructive">
-                    <AlertCircle className="size-3.5 shrink-0" />
-                    {error}
-                  </p>
-                )}
-                <Button
+                <button
                   id="generate-word-btn"
-                  onClick={handleGenerate}
-                  disabled={!inputWord.trim()}
-                  className="w-full h-11 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  onClick={generate}
+                  disabled={!input.trim()}
+                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-primary/90 active:scale-[0.98] transition-all"
                 >
-                  <Sparkles className="size-4" />
-                  Generate with AI
-                  <ChevronRight className="size-4" />
-                </Button>
+                  Generate
+                  <ArrowRight className="size-4" />
+                </button>
               </motion.div>
             )}
 
-            {/* ── Step: Loading ── */}
+            {/* ── Loading ── */}
             {step === "loading" && (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-14 gap-4"
-              >
-                <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Loader2 className="size-7 text-primary animate-spin" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    Analyzing &ldquo;{inputWord}&rdquo;
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Gemini is generating definitions &amp; examples…
-                  </p>
-                </div>
+              <motion.div key="loading"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 className="size-8 text-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">&ldquo;{input}&rdquo;</p>
               </motion.div>
             )}
 
-            {/* ── Step: Preview ── */}
-            {step === "preview" && wordData && (
-              <motion.div
-                key="preview"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-5"
-              >
-                <WordPreview data={wordData} />
+            {/* ── Preview ── */}
+            {step === "preview" && data && (
+              <motion.div key="preview"
+                initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+                className="space-y-5">
+                <WordPreview data={data} />
                 <div className="flex gap-2 pt-1">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep("input")}
-                    className="flex-1 h-10 rounded-xl text-sm"
-                  >
+                  <button onClick={() => setStep("input")}
+                    className="flex-1 h-11 rounded-xl border border-border/60 text-sm font-medium hover:bg-muted transition-colors">
                     Back
-                  </Button>
-                  <Button
-                    id="save-word-btn"
-                    onClick={handleSave}
-                    className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold"
-                  >
-                    <Check className="size-4" />
-                    Save Word
-                  </Button>
+                  </button>
+                  <button id="save-word-btn" onClick={save}
+                    className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all">
+                    <Check className="size-4" /> Save
+                  </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ── Step: Saving ── */}
+            {/* ── Saving ── */}
             {step === "saving" && (
-              <motion.div
-                key="saving"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-14 gap-3"
-              >
+              <motion.div key="saving"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex items-center justify-center py-16">
                 <Loader2 className="size-7 text-primary animate-spin" />
-                <p className="text-sm text-muted-foreground">Saving to your vocabulary…</p>
               </motion.div>
             )}
 
-            {/* ── Step: Saved ── */}
+            {/* ── Saved ── */}
             {step === "saved" && (
-              <motion.div
-                key="saved"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-14 gap-3"
-              >
-                <div className="size-14 rounded-2xl bg-green-50 dark:bg-green-500/15 flex items-center justify-center">
-                  <Check className="size-7 text-green-600 dark:text-green-400" />
+              <motion.div key="saved"
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-16 gap-3">
+                <div className="size-14 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <Check className="size-6 text-green-500" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">
-                    &ldquo;{wordData?.word}&rdquo; saved!
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Added to your vocabulary
-                  </p>
-                </div>
+                <p className="text-base font-semibold text-foreground capitalize">{data?.word}</p>
               </motion.div>
             )}
 
-            {/* ── Step: Error ── */}
+            {/* ── Error ── */}
             {step === "error" && (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-12 gap-4"
-              >
-                <div className="size-14 rounded-2xl bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="size-7 text-destructive" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">Something went wrong</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-[260px]">{error}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleRetry}
-                  className="rounded-xl h-9 text-sm gap-2"
-                >
-                  <RefreshCw className="size-3.5" />
-                  Try again
-                </Button>
+              <motion.div key="error"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-12 gap-4">
+                <AlertCircle className="size-8 text-destructive" />
+                <p className="text-sm text-muted-foreground text-center max-w-[260px]">{error}</p>
+                <button onClick={() => { setStep("input"); setError("") }}
+                  className="flex items-center gap-2 text-sm text-primary hover:underline">
+                  <RefreshCw className="size-3.5" /> Try again
+                </button>
               </motion.div>
             )}
 
