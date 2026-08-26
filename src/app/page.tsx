@@ -17,7 +17,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-center h-full min-h-[40vh]">
         <motion.button
           id="add-word-button"
           onClick={() => setOpen(true)}
