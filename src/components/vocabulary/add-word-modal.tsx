@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, X, Check, Volume2, RefreshCw, AlertCircle, ArrowRight } from "lucide-react"
+import { Loader2, Check, Volume2, RefreshCw, AlertCircle, ArrowRight } from "lucide-react"
 import { useVocabStore, type VocabWord } from "@/store/vocab-store"
 import type { GeneratedWordData } from "@/app/api/generate/route"
 
@@ -202,13 +202,6 @@ export function AddWordModal({ open, onClose }: Props) {
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        {/* Close */}
-        <button onClick={onClose}
-          className="absolute top-4 right-4 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label="Close">
-          <X className="size-4" />
-        </button>
-
         <div className="px-6 pb-8 pt-4 sm:pt-6">
           <AnimatePresence mode="wait">
 
@@ -224,7 +217,7 @@ export function AddWordModal({ open, onClose }: Props) {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") generate(); if (e.key === "Escape") onClose() }}
                   placeholder="Enter a word..."
-                  className="w-full h-14 px-4 rounded-xl text-lg bg-muted/40 border border-border/50 focus:border-primary/60 focus:bg-background text-foreground placeholder:text-muted-foreground outline-none transition-all"
+                  className="w-full h-14 px-5 rounded-xl text-lg bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground/60 outline-none transition-all"
                 />
                 <button
                   id="generate-word-btn"
