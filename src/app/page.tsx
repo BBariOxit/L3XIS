@@ -16,40 +16,39 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Full-height centered layout */}
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <motion.button
           id="add-word-button"
           onClick={() => setOpen(true)}
           aria-label="Add new word"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", damping: 18, stiffness: 260, delay: 0.05 }}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.94 }}
-          className="
-            group relative flex items-center justify-center
-            size-28 rounded-full
-            bg-primary text-primary-foreground
-            shadow-[0_8px_32px_oklch(0.50_0.16_228_/_35%)]
-            hover:shadow-[0_12px_40px_oklch(0.50_0.16_228_/_50%)]
-            transition-shadow duration-300
-            focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40
-          "
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          whileHover="hover"
+          whileTap={{ scale: 0.96 }}
+          className="group relative flex items-center gap-3 px-10 py-5 rounded-2xl border-2 border-foreground bg-transparent text-foreground font-bold text-xl tracking-tight select-none overflow-hidden focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground/20"
         >
-          {/* Ripple ring on hover */}
-          <span
-            className="
-              absolute inset-0 rounded-full
-              ring-0 group-hover:ring-4 ring-primary/25
-              transition-all duration-300
-            "
+          {/* Animated fill on hover */}
+          <motion.span
+            className="pointer-events-none absolute inset-0 bg-foreground origin-left"
+            initial={{ scaleX: 0 }}
+            variants={{ hover: { scaleX: 1 } }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
           />
 
-          <Plus
-            className="size-12 transition-transform duration-200 group-hover:rotate-90"
-            strokeWidth={2}
-          />
+          {/* Icon */}
+          <motion.span
+            className="relative z-10 flex items-center justify-center size-7 rounded-lg border-2 border-foreground group-hover:border-background transition-colors duration-250"
+            variants={{ hover: { rotate: 90 } }}
+            transition={{ duration: 0.25 }}
+          >
+            <Plus className="size-4 transition-colors duration-250 group-hover:text-background" strokeWidth={2.5} />
+          </motion.span>
+
+          {/* Label */}
+          <span className="relative z-10 transition-colors duration-250 group-hover:text-background">
+            Add word
+          </span>
         </motion.button>
       </div>
 
