@@ -21,7 +21,7 @@ export async function GET() {
       partOfSpeech: w.partOfSpeech,
       examples: w.examples,
       synonyms: w.synonyms,
-      collection: w.collection,
+      collection: w.wordCollection,
       addedAt: w.addedAt,
       masteryLevel: w.masteryLevel,
       lastReviewed: w.lastReviewed,
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       partOfSpeech,
       examples,
       synonyms,
-      collection,
+      wordCollection: collection,
     })
 
     return NextResponse.json(
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
           partOfSpeech: saved.partOfSpeech,
           examples: saved.examples,
           synonyms: saved.synonyms,
-          collection: saved.collection,
+          collection: saved.wordCollection,
           addedAt: saved.addedAt,
           masteryLevel: saved.masteryLevel,
         },
