@@ -76,7 +76,7 @@ function NavItem({ title, url, icon: Icon, isActive, isCollapsed }: NavItemProps
         <Icon
           className={[
             "size-4 shrink-0",
-            isActive ? "text-primary" : "opacity-55 group-hover:opacity-90",
+            isActive ? "text-primary" : "",
           ].join(" ")}
         />
         <span className="text-sm">{title}</span>

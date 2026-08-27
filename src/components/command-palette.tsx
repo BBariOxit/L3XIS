@@ -35,6 +35,7 @@ export function CommandPalette({ open, onClose, onAddWord }: CommandPaletteProps
   // Reset on open
   React.useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("")
       setSelected(0)
       setTimeout(() => inputRef.current?.focus(), 30)
@@ -79,6 +80,7 @@ export function CommandPalette({ open, onClose, onAddWord }: CommandPaletteProps
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, allItems, selected, onClose])
 
   return (

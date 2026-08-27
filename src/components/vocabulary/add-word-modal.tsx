@@ -153,6 +153,7 @@ export function AddWordModal({ open, onClose }: Props) {
 
   React.useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStep("input"); setInput(""); setData(null); setError("")
       setTimeout(() => inputRef.current?.focus(), 60)
     }

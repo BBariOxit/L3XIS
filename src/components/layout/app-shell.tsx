@@ -35,11 +35,11 @@ export function AppShell({ children }: AppShellProps) {
     <>
       <Header onSearchClick={() => setCommandOpen(true)} />
 
-      <main className="flex-1 overflow-y-auto bg-muted/20">
+      <div className="flex-1 overflow-y-auto bg-muted/20">
         <div className="container mx-auto p-8 md:p-12 h-full">
           {children}
         </div>
-      </main>
+      </div>
 
       <CommandPalette
         open={commandOpen}
