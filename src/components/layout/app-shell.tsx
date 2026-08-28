@@ -4,6 +4,7 @@ import * as React from "react"
 import { Header } from "@/components/layout/header"
 import { CommandPalette } from "@/components/command-palette"
 import { AddWordModal } from "@/components/vocabulary/add-word-modal"
+import { useVocabStore } from "@/store/vocab-store"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -11,6 +12,7 @@ interface AppShellProps {
 
 /**
  * Client-side shell that manages:
+ * - Global word fetch (once per session, feeds sidebar + all pages)
  * - Command Palette (Cmd+K)
  * - Add Word Modal
  * - Header with wired search click handler
@@ -18,6 +20,12 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [commandOpen, setCommandOpen] = React.useState(false)
   const [addWordOpen, setAddWordOpen] = React.useState(false)
+  const fetchWords = useVocabStore((s) => s.fetchWords)
+
+  // Fetch words once on mount — populates the store for sidebar + all pages
+  React.useEffect(() => {
+    fetchWords()
+  }, [fetchWords])
 
   // Global Cmd+K shortcut
   React.useEffect(() => {
