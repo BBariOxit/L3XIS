@@ -21,11 +21,13 @@ export function AppShell({ children }: AppShellProps) {
   const [commandOpen, setCommandOpen] = React.useState(false)
   const [addWordOpen, setAddWordOpen] = React.useState(false)
   const fetchWords = useVocabStore((s) => s.fetchWords)
+  const fetchCollections = useVocabStore((s) => s.fetchCollections)
 
-  // Fetch words once on mount — populates the store for sidebar + all pages
+  // Fetch words + collections once on mount — populates the store for sidebar + all pages
   React.useEffect(() => {
     fetchWords()
-  }, [fetchWords])
+    fetchCollections()
+  }, [fetchWords, fetchCollections])
 
   // Global Cmd+K shortcut
   React.useEffect(() => {
