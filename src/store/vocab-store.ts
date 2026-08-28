@@ -39,7 +39,7 @@ interface VocabState {
   // Actions
   fetchWords: () => Promise<void>
   addWord: (word: Omit<VocabWord, "id" | "addedAt" | "masteryLevel">) => void
-  removeWord: (id: string) => void
+  removeWord: (id: string) => Promise<void>
   updateWord: (id: string, updates: Partial<VocabWord>) => void
   addCollection: (name: string, color: string) => void
 }
@@ -105,11 +105,26 @@ export const useVocabStore = create<VocabState>((set, get) => ({
     })),
 
   // ── removeWord ──────────────────────────────────────────
+  // Optimistic: remove from local state immediately, then persist to DB.
+  // If the API call fails, the word is NOT restored (acceptable UX tradeoff;
+  // a page refresh will re-sync from MongoDB).
 
-  removeWord: (id) =>
+  removeWord: async (id) => {
+    // Optimistic removal
     set((state) => ({
       words: state.words.filter((w) => w.id !== id),
-    })),
+    }))
+
+    try {
+      const res = await fetch(`/api/words/${id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        console.error("[removeWord] API error:", json.error ?? res.status)
+      }
+    } catch (err) {
+      console.error("[removeWord]", err)
+    }
+  },
 
   // ── updateWord ──────────────────────────────────────────
 
@@ -128,3 +143,4 @@ export const useVocabStore = create<VocabState>((set, get) => ({
       ],
     })),
 }))
+
