@@ -28,6 +28,7 @@ export interface IWordFields {
   addedAt: Date
   masteryLevel: number
   lastReviewed?: Date
+  isFavorited: boolean
 }
 
 // ─── Schema ───────────────────────────────────────────────
@@ -47,6 +48,7 @@ const WordSchema = new Schema(
     addedAt: { type: Date, default: Date.now },
     masteryLevel: { type: Number, default: 0, min: 0, max: 4 },
     lastReviewed: { type: Date },
+    isFavorited: { type: Boolean, default: false },
   },
   {
     timestamps: false, // we manage addedAt manually

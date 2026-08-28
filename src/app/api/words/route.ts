@@ -25,6 +25,7 @@ export async function GET() {
       addedAt: w.addedAt,
       masteryLevel: w.masteryLevel,
       lastReviewed: w.lastReviewed,
+      isFavorited: w.isFavorited ?? false,
     }))
 
     return NextResponse.json({ words: payload })
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
           collection: saved.wordCollection,
           addedAt: saved.addedAt,
           masteryLevel: saved.masteryLevel,
+          isFavorited: saved.isFavorited ?? false,
         },
       },
       { status: 201 }
