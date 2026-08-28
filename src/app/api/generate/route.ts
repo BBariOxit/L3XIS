@@ -9,7 +9,6 @@ export interface GeneratedWordData {
   partOfSpeech: string
   definition: string
   definitionVi: string
-  examples: { sentence: string; translation: string; context: string }[]
   synonyms: string[]
 }
 
@@ -25,13 +24,6 @@ Return ONLY valid JSON (no markdown fences, no extra text) that exactly matches 
   "partOfSpeech": string,  // e.g. "adjective", "noun", "verb"
   "definition": string,    // clear, concise English definition (1–2 sentences)
   "definitionVi": string,  // Vietnamese translation of the definition
-  "examples": [            // exactly 2 example sentences
-    {
-      "sentence": string,    // natural English sentence using the word
-      "translation": string, // Vietnamese translation of the sentence
-      "context": string      // one word context label e.g. "work", "nature"
-    }
-  ],
   "synonyms": string[]     // 3 to 5 synonyms
 }`
 }

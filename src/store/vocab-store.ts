@@ -1,12 +1,6 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 
 // ─── Types ────────────────────────────────────────────────
-
-export interface WordExample {
-  sentence: string
-  translation: string
-  context: string
-}
 
 export interface VocabWord {
   id: string
@@ -15,7 +9,6 @@ export interface VocabWord {
   definition: string
   definitionVi?: string
   partOfSpeech: string
-  examples: WordExample[]
   synonyms: string[]
   collection: string
   addedAt: Date

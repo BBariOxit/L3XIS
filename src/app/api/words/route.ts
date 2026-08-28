@@ -19,7 +19,6 @@ export async function GET() {
       definition: w.definition,
       definitionVi: w.definitionVi,
       partOfSpeech: w.partOfSpeech,
-      examples: w.examples,
       synonyms: w.synonyms,
       collection: w.wordCollection,
       addedAt: w.addedAt,
@@ -53,7 +52,6 @@ export async function POST(request: Request) {
       definition,
       definitionVi = "",
       partOfSpeech = "unknown",
-      examples = [],
       synonyms = [],
       collection = "default",
     } = body
@@ -71,7 +69,6 @@ export async function POST(request: Request) {
       definition,
       definitionVi,
       partOfSpeech,
-      examples,
       synonyms,
       wordCollection: collection,
     })
@@ -85,7 +82,6 @@ export async function POST(request: Request) {
           definition: saved.definition,
           definitionVi: saved.definitionVi,
           partOfSpeech: saved.partOfSpeech,
-          examples: saved.examples,
           synonyms: saved.synonyms,
           collection: saved.wordCollection,
           addedAt: saved.addedAt,

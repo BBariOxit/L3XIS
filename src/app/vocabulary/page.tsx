@@ -1,8 +1,8 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Plus, Trash2, Volume2, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, Plus, Trash2, Volume2 } from "lucide-react"
 import { useVocabStore } from "@/store/vocab-store"
 import { AddWordModal } from "@/components/vocabulary/add-word-modal"
 import { Input } from "@/components/ui/input"
@@ -46,9 +46,7 @@ function WordCard({
   word: VocabWord
   onDelete: (id: string) => void
 }) {
-  const [expanded, setExpanded] = React.useState(false)
   const mastery = MASTERY[word.masteryLevel] ?? MASTERY[0]
-  const hasExamples = word.examples.length > 0
 
   return (
     <motion.div
@@ -116,49 +114,7 @@ function WordCard({
         >
           <Volume2 className="size-3.5" />
         </button>
-
-        {hasExamples && (
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors"
-          >
-            {expanded ? (
-              <><ChevronUp className="size-3" /> Hide examples</>
-            ) : (
-              <><ChevronDown className="size-3" /> {word.examples.length} example{word.examples.length > 1 ? "s" : ""}</>
-            )}
-          </button>
-        )}
       </div>
-
-      {/* Expandable examples */}
-      <AnimatePresence>
-        {expanded && hasExamples && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 space-y-2.5 border-t border-border/40 pt-3">
-              {word.examples.map((ex, i) => (
-                <div key={i} className="space-y-0.5">
-                  <p className="text-xs text-foreground/75 italic leading-relaxed">&ldquo;{ex.sentence}&rdquo;</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed pl-2.5 border-l border-border">
-                    {ex.translation}
-                  </p>
-                  {ex.context && (
-                    <span className="inline-block text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                      {ex.context}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
