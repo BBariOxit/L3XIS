@@ -36,6 +36,13 @@ Return ONLY valid JSON (no markdown fences, no extra text) that exactly matches 
 }`
 }
 
+// ─── Models ───────────────────────────────────────────────
+// Primary: gemini-3.6-flash (latest)
+// Fallback: gemini-3.5-flash-lite (if primary quota/unavailable)
+
+const PRIMARY_MODEL  = "gemini-3.6-flash"
+const FALLBACK_MODEL = "gemini-3.5-flash-lite"
+
 // ─── POST /api/generate ───────────────────────────────────
 // Accepts: { word: string }
 // Returns: GeneratedWordData JSON
@@ -60,10 +67,10 @@ export async function POST(request: Request) {
 
   const ai = new GoogleGenAI({ apiKey })
 
-  // Helper to run one Gemini attempt
-  async function attempt(): Promise<GeneratedWordData> {
+  // Helper to run one Gemini attempt with a given model
+  async function attempt(model: string): Promise<GeneratedWordData> {
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model,
       contents: buildPrompt(word),
       config: {
         responseMimeType: "application/json",
@@ -92,11 +99,15 @@ export async function POST(request: Request) {
   try {
     let data: GeneratedWordData
     try {
-      data = await attempt()
+      // First try: primary model
+      data = await attempt(PRIMARY_MODEL)
     } catch (firstErr) {
-      // Retry once on parse/network failure
-      console.warn("[POST /api/generate] first attempt failed, retrying:", firstErr)
-      data = await attempt()
+      // Retry with fallback model (handles quota, 404, deprecation)
+      console.warn(
+        `[POST /api/generate] ${PRIMARY_MODEL} failed, retrying with ${FALLBACK_MODEL}:`,
+        firstErr
+      )
+      data = await attempt(FALLBACK_MODEL)
     }
 
     return NextResponse.json(data)
