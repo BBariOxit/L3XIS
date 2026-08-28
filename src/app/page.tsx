@@ -3,17 +3,11 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { Plus } from "lucide-react"
-import { useVocabStore } from "@/store/vocab-store"
 import { AddWordModal } from "@/components/vocabulary/add-word-modal"
 
 export default function HomePage() {
   const [open, setOpen] = React.useState(false)
   const [hovered, setHovered] = React.useState(false)
-  const fetchWords = useVocabStore((s) => s.fetchWords)
-
-  React.useEffect(() => {
-    fetchWords()
-  }, [fetchWords])
 
   return (
     <>

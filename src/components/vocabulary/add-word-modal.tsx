@@ -81,23 +81,6 @@ function WordPreview({ data }: { data: GeneratedWordData }) {
         )}
       </div>
 
-      {/* Examples by context */}
-      {data.examples.length > 0 && (
-        <div className="space-y-3">
-          {data.examples.map((ex, i) => (
-            <div key={i} className="rounded-lg bg-muted/40 px-4 py-3 space-y-1">
-              <p className="text-sm text-foreground/85 italic">&ldquo;{ex.sentence}&rdquo;</p>
-              <p className="text-xs text-muted-foreground">{ex.translation}</p>
-              {ex.context && (
-                <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground mt-1">
-                  {ex.context}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Synonyms */}
       {data.synonyms.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

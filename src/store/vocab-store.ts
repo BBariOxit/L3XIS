@@ -2,12 +2,6 @@ import { create } from "zustand"
 
 // ─── Types ────────────────────────────────────────────────
 
-export interface WordExample {
-  sentence: string
-  translation: string
-  context: string
-}
-
 export interface VocabWord {
   id: string
   word: string
@@ -15,19 +9,20 @@ export interface VocabWord {
   definition: string
   definitionVi?: string
   partOfSpeech: string
-  examples: WordExample[]
   synonyms: string[]
   collection: string
   addedAt: Date
-  masteryLevel: number // 0–4
+  masteryLevel: number // 0-4
   lastReviewed?: Date
+  isFavorited?: boolean
 }
 
 export interface VocabCollection {
   id: string
+  slug: string
   name: string
   color: string
-  wordCount: number
+  icon?: string | null
 }
 
 interface VocabState {
@@ -35,34 +30,34 @@ interface VocabState {
   collections: VocabCollection[]
   isLoading: boolean
   hasFetched: boolean
+  collectionsLoading: boolean
+  collectionsFetched: boolean
 
-  // Actions
+  // Word actions
   fetchWords: () => Promise<void>
   addWord: (word: Omit<VocabWord, "id" | "addedAt" | "masteryLevel">) => void
-  removeWord: (id: string) => void
+  removeWord: (id: string) => Promise<void>
   updateWord: (id: string, updates: Partial<VocabWord>) => void
-  addCollection: (name: string, color: string) => void
+
+  // Collection actions
+  fetchCollections: () => Promise<void>
+  addCollection: (name: string, color: string, icon?: string) => Promise<VocabCollection | null>
+  removeCollection: (id: string) => Promise<void>
 }
-
-// ─── Default collections ──────────────────────────────────
-
-const DEFAULT_COLLECTIONS: VocabCollection[] = [
-  { id: "default", name: "General", color: "indigo", wordCount: 0 },
-  { id: "academic", name: "Academic", color: "violet", wordCount: 0 },
-  { id: "business", name: "Business", color: "emerald", wordCount: 0 },
-]
 
 // ─── Store ────────────────────────────────────────────────
 
 export const useVocabStore = create<VocabState>((set, get) => ({
   words: [],
-  collections: DEFAULT_COLLECTIONS,
+  collections: [],
   isLoading: false,
   hasFetched: false,
+  collectionsLoading: false,
+  collectionsFetched: false,
 
   // ── fetchWords ──────────────────────────────────────────
   // Loads all words from MongoDB via GET /api/words.
-  // Idempotent — only fetches once per session (hasFetched guard).
+  // Idempotent -- only fetches once per session (hasFetched guard).
 
   fetchWords: async () => {
     if (get().hasFetched || get().isLoading) return
@@ -73,7 +68,7 @@ export const useVocabStore = create<VocabState>((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const { words } = await res.json()
 
-      // Convert addedAt string → Date
+      // Convert addedAt string -> Date
       const parsed: VocabWord[] = words.map(
         (w: Omit<VocabWord, "addedAt"> & { addedAt: string }) => ({
           ...w,
@@ -89,7 +84,7 @@ export const useVocabStore = create<VocabState>((set, get) => ({
   },
 
   // ── addWord ─────────────────────────────────────────────
-  // Optimistic local update — the API call is made by the modal before this.
+  // Optimistic local update -- the API call is made by the modal before this.
 
   addWord: (word) =>
     set((state) => ({
@@ -99,17 +94,30 @@ export const useVocabStore = create<VocabState>((set, get) => ({
           id: crypto.randomUUID(),
           addedAt: new Date(),
           masteryLevel: 0,
+          isFavorited: false,
         },
         ...state.words,
       ],
     })),
 
   // ── removeWord ──────────────────────────────────────────
+  // Optimistic: remove from local state immediately, then persist to DB.
 
-  removeWord: (id) =>
+  removeWord: async (id) => {
     set((state) => ({
       words: state.words.filter((w) => w.id !== id),
-    })),
+    }))
+
+    try {
+      const res = await fetch(`/api/words/${id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        console.error("[removeWord] API error:", json.error ?? res.status)
+      }
+    } catch (err) {
+      console.error("[removeWord]", err)
+    }
+  },
 
   // ── updateWord ──────────────────────────────────────────
 
@@ -118,13 +126,82 @@ export const useVocabStore = create<VocabState>((set, get) => ({
       words: state.words.map((w) => (w.id === id ? { ...w, ...updates } : w)),
     })),
 
-  // ── addCollection ───────────────────────────────────────
+  // ── fetchCollections ────────────────────────────────────
+  // Loads all collections from MongoDB via GET /api/collections.
+  // Seeds the 3 defaults on the server if they don't exist yet.
 
-  addCollection: (name, color) =>
+  fetchCollections: async () => {
+    if (get().collectionsFetched || get().collectionsLoading) return
+
+    set({ collectionsLoading: true })
+    try {
+      const res = await fetch("/api/collections")
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { collections } = await res.json()
+
+      set({
+        collections: collections as VocabCollection[],
+        collectionsLoading: false,
+        collectionsFetched: true,
+      })
+    } catch (err) {
+      console.error("[fetchCollections]", err)
+      set({ collectionsLoading: false, collectionsFetched: true })
+    }
+  },
+
+  // ── addCollection ───────────────────────────────────────
+  // POSTs to API, then optimistically adds to local state on success.
+  // Returns the created collection or null on failure.
+
+  addCollection: async (name, color, icon?) => {
+    try {
+      const res = await fetch("/api/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, color, icon }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Failed")
+
+      const col: VocabCollection = json.collection
+      set((state) => ({
+        collections: [...state.collections, col],
+      }))
+      return col
+    } catch (err) {
+      console.error("[addCollection]", err)
+      return null
+    }
+  },
+
+  // ── removeCollection ────────────────────────────────────
+  // Optimistic removal + API call.
+  // Words in the deleted collection are moved to "general" by the API.
+
+  removeCollection: async (id) => {
     set((state) => ({
-      collections: [
-        ...state.collections,
-        { id: crypto.randomUUID(), name, color, wordCount: 0 },
-      ],
-    })),
+      collections: state.collections.filter((c) => c.id !== id),
+    }))
+
+    try {
+      const res = await fetch(`/api/collections/${id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        console.error("[removeCollection] API error:", json.error ?? res.status)
+      } else {
+        // Sync words that were moved to general
+        set((state) => ({
+          words: state.words.map((w) =>
+            w.collection !== "general" &&
+            !state.collections.some((c) => c.slug === w.collection)
+              ? { ...w, collection: "general" }
+              : w
+          ),
+        }))
+      }
+    } catch (err) {
+      console.error("[removeCollection]", err)
+    }
+  },
 }))
