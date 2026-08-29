@@ -48,6 +48,14 @@ function WordCard({
 }) {
   const mastery = MASTERY[word.masteryLevel] ?? MASTERY[0]
 
+  // Use meanings[] if available, otherwise fall back to the single definition
+  const meanings =
+    word.meanings && word.meanings.length > 0
+      ? word.meanings
+      : [{ partOfSpeech: word.partOfSpeech, definitionVi: word.definitionVi ?? word.definition }]
+
+  const isPolysemous = meanings.length > 1
+
   return (
     <motion.div
       layout
@@ -67,9 +75,6 @@ function WordCard({
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${posColor(word.partOfSpeech)}`}>
-              {word.partOfSpeech}
-            </span>
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${mastery.bg} ${mastery.color}`}>
               {mastery.label}
             </span>
@@ -83,14 +88,29 @@ function WordCard({
           </div>
         </div>
 
-        {/* Definition EN */}
-        <p className="text-xs text-foreground/80 leading-relaxed">{word.definition}</p>
+        {/* Meanings */}
+        <div className="space-y-2">
+          {meanings.map((m, i) => (
+            <div key={i} className="space-y-0.5">
+              {isPolysemous && (
+                <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${posColor(m.partOfSpeech)}`}>
+                  {m.partOfSpeech}
+                </span>
+              )}
+              {m.definitionVi && (
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {m.definitionVi}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
 
-        {/* Definition VI */}
-        {word.definitionVi && (
-          <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-2.5">
-            {word.definitionVi}
-          </p>
+        {/* Part of speech badge — shown only for single-meaning words */}
+        {!isPolysemous && (
+          <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${posColor(word.partOfSpeech)}`}>
+            {word.partOfSpeech}
+          </span>
         )}
 
         {/* Synonyms */}

@@ -40,6 +40,13 @@ const posColor = (p: string) =>
 function WordPreview({ data }: { data: GeneratedWordData }) {
   const [active, setActive] = React.useState(false)
 
+  const meanings =
+    data.meanings && data.meanings.length > 0
+      ? data.meanings
+      : [{ partOfSpeech: data.partOfSpeech, definitionVi: data.definitionVi }]
+
+  const isPolysemous = meanings.length > 1
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -57,9 +64,11 @@ function WordPreview({ data }: { data: GeneratedWordData }) {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${posColor(data.partOfSpeech)}`}>
-            {data.partOfSpeech}
-          </span>
+          {!isPolysemous && (
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${posColor(data.partOfSpeech)}`}>
+              {data.partOfSpeech}
+            </span>
+          )}
           <button
             id="speak-word-btn"
             onClick={() => { setActive(true); speak(data.word); setTimeout(() => setActive(false), 1000) }}
@@ -71,14 +80,22 @@ function WordPreview({ data }: { data: GeneratedWordData }) {
         </div>
       </div>
 
-      {/* Definition EN → VI */}
-      <div className="space-y-2">
-        <p className="text-sm leading-relaxed text-foreground">{data.definition}</p>
-        {data.definitionVi && (
-          <p className="text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/30 pl-3">
-            {data.definitionVi}
-          </p>
-        )}
+      {/* Meanings */}
+      <div className="space-y-3">
+        {meanings.map((m, i) => (
+          <div key={i} className="space-y-0.5">
+            {isPolysemous && (
+              <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full ${posColor(m.partOfSpeech)}`}>
+                {m.partOfSpeech}
+              </span>
+            )}
+            {m.definitionVi && (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {m.definitionVi}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Synonyms */}
