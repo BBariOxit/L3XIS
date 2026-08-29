@@ -2,286 +2,411 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Plus, Trash2, Volume2 } from "lucide-react"
+import { Search, Plus, SlidersHorizontal, X } from "lucide-react"
 import { useVocabStore } from "@/store/vocab-store"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { AddWordModal } from "@/components/vocabulary/add-word-modal"
+import { WordRow } from "@/components/vocabulary/word-row"
+import { WordDetailPanel } from "@/components/vocabulary/word-detail-panel"
 import { Input } from "@/components/ui/input"
 import type { VocabWord } from "@/store/vocab-store"
 
-// --- Mastery config ---
+// ─── Mastery config (for stats bar) ─────────────────────
 
 const MASTERY = [
-  { label: "New",      color: "text-muted-foreground",                       bg: "bg-muted" },
-  { label: "Beginner", color: "text-red-600 dark:text-red-400",              bg: "bg-red-50 dark:bg-red-500/10" },
-  { label: "Learning", color: "text-yellow-600 dark:text-yellow-400",        bg: "bg-yellow-50 dark:bg-yellow-500/10" },
-  { label: "Familiar", color: "text-blue-600 dark:text-blue-400",            bg: "bg-blue-50 dark:bg-blue-500/10" },
-  { label: "Mastered", color: "text-green-600 dark:text-green-400",          bg: "bg-green-50 dark:bg-green-500/10" },
+  { label: "New",      color: "text-muted-foreground",     bg: "bg-muted/60",        dot: "bg-muted-foreground/40" },
+  { label: "Beginner", color: "text-red-400",              bg: "bg-red-500/10",       dot: "bg-red-500" },
+  { label: "Learning", color: "text-yellow-400",           bg: "bg-yellow-500/10",    dot: "bg-yellow-500" },
+  { label: "Familiar", color: "text-blue-400",             bg: "bg-blue-500/10",      dot: "bg-blue-500" },
+  { label: "Mastered", color: "text-green-400",            bg: "bg-green-500/10",     dot: "bg-green-500" },
 ]
 
-const POS_COLOR: Record<string, string> = {
-  noun:        "bg-blue-500/10   text-blue-500",
-  verb:        "bg-green-500/10  text-green-600 dark:text-green-400",
-  adjective:   "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-  adverb:      "bg-amber-500/10  text-amber-600 dark:text-amber-400",
-  preposition: "bg-rose-500/10   text-rose-600 dark:text-rose-400",
+const POS_COLORS: Record<string, string> = {
+  noun:        "bg-blue-500/10   text-blue-400",
+  verb:        "bg-green-500/10  text-green-400",
+  adjective:   "bg-violet-500/10 text-violet-400",
+  adverb:      "bg-amber-500/10  text-amber-400",
+  preposition: "bg-rose-500/10   text-rose-400",
 }
 const posColor = (p: string) =>
-  POS_COLOR[p?.toLowerCase()] ?? "bg-muted text-muted-foreground"
+  POS_COLORS[p?.toLowerCase()] ?? "bg-muted/60 text-muted-foreground"
 
-function speak(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return
-  window.speechSynthesis.cancel()
-  const u = new SpeechSynthesisUtterance(text)
-  u.lang = "en-US"
-  u.rate = 0.9
-  window.speechSynthesis.speak(u)
+// ─── Sort options ─────────────────────────────────────────
+
+type SortKey = "addedAt" | "word" | "mastery"
+
+function sortWords(words: VocabWord[], key: SortKey): VocabWord[] {
+  return [...words].sort((a, b) => {
+    if (key === "word")    return a.word.localeCompare(b.word)
+    if (key === "mastery") return b.masteryLevel - a.masteryLevel
+    // addedAt desc (newest first)
+    return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+  })
 }
 
-// --- Word Card ---
+// ─── Skeleton row ─────────────────────────────────────────
 
-function WordCard({
-  word,
-  onDelete,
-}: {
-  word: VocabWord
-  onDelete: (id: string) => void
-}) {
-  const mastery = MASTERY[word.masteryLevel] ?? MASTERY[0]
-
-  // Use meanings[] if available, otherwise fall back to the single definition
-  const meanings =
-    word.meanings && word.meanings.length > 0
-      ? word.meanings
-      : [{ partOfSpeech: word.partOfSpeech, definitionVi: word.definitionVi ?? word.definition }]
-
-  const isPolysemous = meanings.length > 1
-
+function SkeletonRow() {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.2 }}
-      className="group rounded-xl border border-border/60 bg-card hover:border-border hover:shadow-sm transition-all duration-200"
-    >
-      <div className="p-4 space-y-2.5">
-        {/* Top row */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <h3 className="text-sm font-bold text-foreground capitalize">{word.word}</h3>
-              <span className="text-xs font-mono text-muted-foreground/60">{word.phonetic}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${mastery.bg} ${mastery.color}`}>
-              {mastery.label}
-            </span>
-            <button
-              onClick={() => onDelete(word.id)}
-              className="opacity-0 group-hover:opacity-100 size-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all duration-150"
-              aria-label={`Delete ${word.word}`}
-            >
-              <Trash2 className="size-3" />
-            </button>
-          </div>
-        </div>
-
-        {/* Meanings */}
-        <div className="space-y-2">
-          {meanings.map((m, i) => (
-            <div key={i} className="space-y-0.5">
-              {isPolysemous && (
-                <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${posColor(m.partOfSpeech)}`}>
-                  {m.partOfSpeech}
-                </span>
-              )}
-              {m.definitionVi && (
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {m.definitionVi}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Part of speech badge — shown only for single-meaning words */}
-        {!isPolysemous && (
-          <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${posColor(word.partOfSpeech)}`}>
-            {word.partOfSpeech}
-          </span>
-        )}
-
-        {/* Synonyms */}
-        {word.synonyms.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {word.synonyms.slice(0, 4).map((s) => (
-              <span key={s} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {s}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Footer actions */}
-      <div className="flex items-center justify-between gap-2 px-4 pb-3">
-        <button
-          onClick={() => speak(word.word)}
-          className="size-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-primary/8 transition-colors"
-          aria-label={`Pronounce ${word.word}`}
-        >
-          <Volume2 className="size-3.5" />
-        </button>
-      </div>
-    </motion.div>
+    <div className="px-4 py-3 flex items-center gap-3 rounded-xl bg-card border border-border/30 animate-pulse">
+      <div className="size-2 rounded-full bg-muted/60 shrink-0" />
+      <div className="w-24 h-3.5 rounded-md bg-muted/60" />
+      <div className="w-12 h-4 rounded-full bg-muted/40 hidden sm:block" />
+      <div className="flex-1 h-3 rounded-md bg-muted/30" />
+    </div>
   )
 }
 
-// --- Page ---
+// ─── Page ─────────────────────────────────────────────────
 
 const FILTER_ALL = "all"
 
 export default function VocabularyPage() {
   const [addModalOpen, setAddModalOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const [posFilter, setPosFilter] = React.useState(FILTER_ALL)
-  const words = useVocabStore((s) => s.words)
-  const isLoading = useVocabStore((s) => s.isLoading)
-  const removeWord = useVocabStore((s) => s.removeWord)
+  const [query, setQuery]               = React.useState("")
+  const [posFilter, setPosFilter]       = React.useState(FILTER_ALL)
+  const [masteryFilter, setMasteryFilter] = React.useState<number | null>(null)
+  const [sortKey, setSortKey]           = React.useState<SortKey>("addedAt")
+  const [showFilters, setShowFilters]   = React.useState(false)
+  const [selectedWord, setSelectedWord] = React.useState<VocabWord | null>(null)
 
+  const isMobile    = useIsMobile()
+  const words       = useVocabStore((s) => s.words)
+  const isLoading   = useVocabStore((s) => s.isLoading)
+  const removeWord  = useVocabStore((s) => s.removeWord)
+
+  // ── Derived POS options ──────────────────────────────────
   const posOptions = React.useMemo(() => {
     const set = new Set(words.map((w) => w.partOfSpeech?.toLowerCase()).filter(Boolean))
     return Array.from(set).sort()
   }, [words])
 
-  const filtered = words.filter((w) => {
-    const matchQuery =
-      w.word.toLowerCase().includes(query.toLowerCase()) ||
-      w.definition.toLowerCase().includes(query.toLowerCase()) ||
-      (w.definitionVi?.toLowerCase().includes(query.toLowerCase()) ?? false)
-    const matchPos = posFilter === FILTER_ALL || w.partOfSpeech?.toLowerCase() === posFilter
-    return matchQuery && matchPos
-  })
+  // ── Filter + sort ────────────────────────────────────────
+  const filtered = React.useMemo(() => {
+    const q = query.toLowerCase()
+    const raw = words.filter((w) => {
+      const matchQuery =
+        !q ||
+        w.word.toLowerCase().includes(q) ||
+        w.definition.toLowerCase().includes(q) ||
+        (w.definitionVi?.toLowerCase().includes(q) ?? false) ||
+        (w.meanings?.some((m) => m.definitionVi.toLowerCase().includes(q)) ?? false)
+      const matchPos     = posFilter === FILTER_ALL || w.partOfSpeech?.toLowerCase() === posFilter
+      const matchMastery = masteryFilter === null  || w.masteryLevel === masteryFilter
+      return matchQuery && matchPos && matchMastery
+    })
+    return sortWords(raw, sortKey)
+  }, [words, query, posFilter, masteryFilter, sortKey])
+
+  // ── Sync selectedWord with filtered (deselect if filtered out) ──
+  React.useEffect(() => {
+    if (selectedWord && !filtered.find((w) => w.id === selectedWord.id)) {
+      setSelectedWord(null)
+    }
+  }, [filtered, selectedWord])
+
+  // ── Handle delete ────────────────────────────────────────
+  function handleDelete(id: string) {
+    if (selectedWord?.id === id) setSelectedWord(null)
+    removeWord(id)
+  }
+
+  const hasFilters = posFilter !== FILTER_ALL || masteryFilter !== null || sortKey !== "addedAt"
 
   return (
     <>
-      <div className="max-w-4xl mx-auto space-y-5">
-        {/* Header */}
+      {/*
+        ──────────────────────────────────────────────────────
+        Layout: full-height flex column
+        ──────────────────────────────────────────────────────
+      */}
+      <div className="h-full flex flex-col gap-4 max-w-6xl mx-auto">
+
+        {/* ── Top bar ──────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center justify-between gap-4"
+          transition={{ duration: 0.25 }}
+          className="flex items-center gap-3 flex-wrap"
         >
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Vocabulary</h1>
+          {/* Title + count */}
+          <div className="mr-auto">
+            <h1 className="text-lg font-bold text-foreground leading-none">Vocabulary</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {words.length} word{words.length !== 1 ? "s" : ""} saved
+              {words.length} word{words.length !== 1 ? "s" : ""}
+              {filtered.length !== words.length && ` · ${filtered.length} shown`}
             </p>
           </div>
+
+          {/* Search */}
+          <div className="relative flex-1 min-w-[160px] max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              id="vocab-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search..."
+              className="pl-9 h-9 rounded-xl border-border/50 bg-muted/30 focus:bg-background text-sm"
+              aria-label="Search vocabulary"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter toggle */}
+          <button
+            id="vocab-filter-btn"
+            onClick={() => setShowFilters((v) => !v)}
+            className={`h-9 px-3 rounded-xl flex items-center gap-1.5 text-xs font-medium border transition-all duration-150 ${
+              hasFilters || showFilters
+                ? "bg-primary/10 border-primary/20 text-primary"
+                : "bg-muted/30 border-border/50 text-muted-foreground hover:text-foreground"
+            }`}
+            aria-label="Toggle filters"
+          >
+            <SlidersHorizontal className="size-3.5" />
+            <span className="hidden sm:inline">Filter</span>
+            {hasFilters && <span className="size-1.5 rounded-full bg-primary" />}
+          </button>
+
+          {/* Add word */}
           <button
             id="vocab-add-word-button"
             onClick={() => setAddModalOpen(true)}
-            className="flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 active:scale-95 transition-all duration-150 whitespace-nowrap"
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 active:scale-95 transition-all duration-150 whitespace-nowrap"
           >
             <Plus className="size-3.5" />
-            Add word
+            <span className="hidden sm:inline">Add word</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </motion.div>
 
-        {/* Search */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05, duration: 0.3 }}
-          className="relative"
-        >
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search word, definition, or Vietnamese meaning..."
-            className="pl-9 h-9 rounded-xl border-border/60 bg-muted/30 focus:bg-background text-sm"
-            aria-label="Search vocabulary"
-          />
-        </motion.div>
+        {/* ── Filter panel ─────────────────────────────── */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-wrap gap-3 p-4 rounded-xl bg-muted/20 border border-border/30">
+                {/* Mastery filter */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Mastery</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => setMasteryFilter(null)}
+                      className={`h-7 px-2.5 rounded-lg text-[11px] font-medium transition-colors ${
+                        masteryFilter === null ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {MASTERY.map((m, i) => {
+                      const count = words.filter((w) => w.masteryLevel === i).length
+                      if (count === 0) return null
+                      return (
+                        <button
+                          key={m.label}
+                          onClick={() => setMasteryFilter(masteryFilter === i ? null : i)}
+                          className={`h-7 px-2.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 transition-colors ${
+                            masteryFilter === i ? `${m.bg} ${m.color}` : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <span className={`size-1.5 rounded-full ${m.dot}`} />
+                          {m.label} <span className="opacity-60">({count})</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
 
-        {/* Mastery stats + POS filter */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.3 }}
-          className="flex gap-2 flex-wrap"
-        >
-          {MASTERY.map((m) => {
-            const count = words.filter((w) => MASTERY[w.masteryLevel]?.label === m.label).length
-            if (count === 0) return null
-            return (
-              <div
-                key={m.label}
-                className={`flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg ${m.bg} border border-border/20`}
-              >
-                <span className={`text-xs font-bold tabular-nums ${m.color}`}>{count}</span>
-                <span className="text-xs text-muted-foreground">{m.label}</span>
+                {/* Divider */}
+                {posOptions.length > 0 && <div className="w-px bg-border/30 self-stretch hidden sm:block" />}
+
+                {/* POS filter */}
+                {posOptions.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Part of speech</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => setPosFilter(FILTER_ALL)}
+                        className={`h-7 px-2.5 rounded-lg text-[11px] font-medium transition-colors ${
+                          posFilter === FILTER_ALL ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        All
+                      </button>
+                      {posOptions.map((pos) => (
+                        <button
+                          key={pos}
+                          onClick={() => setPosFilter(posFilter === pos ? FILTER_ALL : pos)}
+                          className={`h-7 px-2.5 rounded-lg text-[11px] font-medium capitalize transition-colors ${
+                            posFilter === pos
+                              ? posColor(pos)
+                              : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {pos}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="w-px bg-border/30 self-stretch hidden sm:block" />
+
+                {/* Sort */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Sort by</p>
+                  <div className="flex gap-1.5">
+                    {(["addedAt", "word", "mastery"] as SortKey[]).map((k) => (
+                      <button
+                        key={k}
+                        onClick={() => setSortKey(k)}
+                        className={`h-7 px-2.5 rounded-lg text-[11px] font-medium capitalize transition-colors ${
+                          sortKey === k ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {k === "addedAt" ? "Recent" : k === "word" ? "A–Z" : "Mastery"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reset */}
+                {hasFilters && (
+                  <button
+                    onClick={() => { setPosFilter(FILTER_ALL); setMasteryFilter(null); setSortKey("addedAt") }}
+                    className="ml-auto self-end h-7 px-2.5 rounded-lg text-[11px] text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Reset
+                  </button>
+                )}
               </div>
-            )
-          })}
-
-          {posOptions.length > 0 && (
-            <div className="flex gap-1.5 ml-auto flex-wrap">
-              <button
-                onClick={() => setPosFilter(FILTER_ALL)}
-                className={`h-7 px-2.5 rounded-lg text-[11px] font-medium transition-colors ${
-                  posFilter === FILTER_ALL
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                All
-              </button>
-              {posOptions.map((pos) => (
-                <button
-                  key={pos}
-                  onClick={() => setPosFilter(posFilter === pos ? FILTER_ALL : pos)}
-                  className={`h-7 px-2.5 rounded-lg text-[11px] font-medium capitalize transition-colors ${
-                    posFilter === pos
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {pos}
-                </button>
-              ))}
-            </div>
+            </motion.div>
           )}
-        </motion.div>
+        </AnimatePresence>
 
-        {/* Word list */}
-        {isLoading && words.length === 0 ? (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 rounded-xl bg-muted/40 animate-pulse" />
-            ))}
+        {/* ── Main area: list + panel ───────────────────── */}
+        <div className="flex-1 min-h-0 flex gap-4">
+
+          {/* ── Word list ────────────────────────────── */}
+          <div className={`flex flex-col min-h-0 ${selectedWord && !isMobile ? "flex-1" : "w-full"}`}>
+
+            {isLoading && words.length === 0 ? (
+              /* Loading skeleton */
+              <div className="space-y-1.5">
+                {[1, 2, 3, 4, 5].map((i) => <SkeletonRow key={i} />)}
+              </div>
+
+            ) : filtered.length === 0 ? (
+              /* Empty state */
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex-1 flex flex-col items-center justify-center gap-4 py-24 text-center"
+              >
+                <div className="size-16 rounded-2xl bg-muted/30 flex items-center justify-center text-3xl">
+                  {words.length === 0 ? "📚" : "🔍"}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {words.length === 0 ? "No words yet" : "No matches found"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {words.length === 0
+                      ? "Add your first word to get started"
+                      : "Try adjusting your search or filters"}
+                  </p>
+                </div>
+                {words.length === 0 && (
+                  <button
+                    onClick={() => setAddModalOpen(true)}
+                    className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 active:scale-95 transition-all"
+                  >
+                    <Plus className="size-3.5" />
+                    Add your first word
+                  </button>
+                )}
+              </motion.div>
+
+            ) : (
+              /* Word rows */
+              <div className="overflow-y-auto space-y-1 pr-0.5">
+                <AnimatePresence mode="popLayout">
+                  {filtered.map((word, i) => (
+                    <WordRow
+                      key={word.id}
+                      word={word}
+                      index={i}
+                      isSelected={selectedWord?.id === word.id}
+                      onSelect={(w) => {
+                        // Toggle off on mobile if same word
+                        if (isMobile && selectedWord?.id === w.id) {
+                          setSelectedWord(null)
+                        } else {
+                          setSelectedWord(w)
+                        }
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
+
+                {/* Bottom padding for mobile FAB */}
+                <div className="h-20 sm:hidden" />
+              </div>
+            )}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-sm text-muted-foreground">
-              {query || posFilter !== FILTER_ALL ? "No words match your filter" : "No words yet — add one!"}
-            </p>
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {filtered.map((w) => (
-                <WordCard key={w.id} word={w} onDelete={removeWord} />
-              ))}
-            </div>
-          </AnimatePresence>
-        )}
+
+          {/* ── Desktop side panel ───────────────────── */}
+          {!isMobile && (
+            <AnimatePresence>
+              {selectedWord && (
+                <motion.aside
+                  key="side-panel"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 340, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="shrink-0 overflow-hidden"
+                >
+                  <div className="w-[340px] h-full rounded-xl border border-border/50 bg-card p-5 overflow-y-auto">
+                    <WordDetailPanel
+                      word={selectedWord}
+                      onClose={() => setSelectedWord(null)}
+                      onDelete={handleDelete}
+                      mobile={false}
+                    />
+                  </div>
+                </motion.aside>
+              )}
+            </AnimatePresence>
+          )}
+        </div>
       </div>
 
+      {/* ── Mobile bottom sheet (tap a word row) ─────── */}
+      {isMobile && (
+        <WordDetailPanel
+          word={selectedWord}
+          onClose={() => setSelectedWord(null)}
+          onDelete={handleDelete}
+          mobile={true}
+        />
+      )}
+
+      {/* ── Mobile FAB ─────────────────────────────── */}
       <button
         onClick={() => setAddModalOpen(true)}
         className="fixed bottom-6 right-6 sm:hidden size-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all duration-150 flex items-center justify-center z-40"
