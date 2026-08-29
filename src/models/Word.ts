@@ -12,6 +12,7 @@ export interface IWordFields {
   definitionVi: string
   partOfSpeech: string
   synonyms: string[]
+  meanings?: Array<{ partOfSpeech: string; definitionVi: string }>
   wordCollection: string  // Maps to "collection" in DB via schema key alias below
   addedAt: Date
   masteryLevel: number
@@ -29,6 +30,15 @@ const WordSchema = new Schema(
     definitionVi: { type: String, default: "" },
     partOfSpeech: { type: String, default: "unknown" },
     synonyms: { type: [String], default: [] },
+    meanings: {
+      type: [
+        {
+          partOfSpeech: { type: String },
+          definitionVi: { type: String },
+        },
+      ],
+      default: [],
+    },
     // Store as "collection" in MongoDB (renamed from wordCollection in interface
     // to avoid Document.collection built-in collision)
     wordCollection: { type: String, default: "default" },

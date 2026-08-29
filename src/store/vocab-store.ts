@@ -2,6 +2,11 @@ import { create } from "zustand"
 
 // ─── Types ────────────────────────────────────────────────
 
+export interface WordMeaning {
+  partOfSpeech: string
+  definitionVi: string
+}
+
 export interface VocabWord {
   id: string
   word: string
@@ -10,6 +15,7 @@ export interface VocabWord {
   definitionVi?: string
   partOfSpeech: string
   synonyms: string[]
+  meanings?: WordMeaning[]
   collection: string
   addedAt: Date
   masteryLevel: number // 0-4
