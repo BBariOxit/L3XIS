@@ -98,7 +98,7 @@ export function WordDetailPanel({
               <div className="flex justify-center pt-3 pb-2">
                 <div className="w-10 h-1 rounded-full bg-border" />
               </div>
-              <div className="px-6 pb-10 pt-2">
+              <div className="px-6 pb-5 pt-2">
                 <PanelContent
                   word={word}
                   mastery={mastery}
@@ -187,7 +187,7 @@ function PanelContent({
   onClose,
 }: PanelContentProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
