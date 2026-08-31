@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import {
@@ -72,7 +72,7 @@ function NavItem({ title, url, icon: Icon, isActive, isCollapsed }: NavItemProps
           "h-9 px-2.5 rounded-lg transition-colors duration-150 group",
           isActive
             ? "bg-primary/10 text-primary font-medium"
-            : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+            : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
         ].join(" ")}
       >
         <Icon
@@ -97,7 +97,7 @@ interface NavGroupProps {
 function NavGroup({ label, items, pathname, isCollapsed }: NavGroupProps) {
   return (
     <SidebarGroup className="py-0">
-      <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 transition-all duration-200">
+      <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60 px-2.5 transition-all duration-200">
         {label}
       </SidebarGroupLabel>
       <SidebarGroupContent>
@@ -142,7 +142,7 @@ function RecentWords({ isCollapsed }: { isCollapsed: boolean }) {
               <SidebarMenuButton
                 render={<Link href="/vocabulary" />}
                 title={`${words.length} words`}
-                className="h-9 px-2.5 rounded-lg transition-colors duration-150 text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                className="h-9 px-2.5 rounded-lg transition-colors duration-150 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
               >
                 <div className="relative">
                   <Clock className="size-4 shrink-0" />
@@ -162,7 +162,7 @@ function RecentWords({ isCollapsed }: { isCollapsed: boolean }) {
 
   return (
     <SidebarGroup className="py-0">
-      <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/35 px-2.5 flex items-center">
+      <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/60 px-2.5 flex items-center">
         Recent Words
         {words.length > 0 && (
           <span className="ml-auto text-[9px] font-bold text-primary/70 tabular-nums">
@@ -178,7 +178,7 @@ function RecentWords({ isCollapsed }: { isCollapsed: boolean }) {
             ))}
           </div>
         ) : recent.length === 0 ? (
-          <p className="px-2.5 py-2 text-[11px] text-sidebar-foreground/35">
+          <p className="px-2.5 py-2 text-[11px] text-sidebar-foreground/60">
             No words yet
           </p>
         ) : (
@@ -199,12 +199,12 @@ function RecentWords({ isCollapsed }: { isCollapsed: boolean }) {
                   <span className="text-xs font-semibold text-sidebar-foreground truncate group-hover/word:text-foreground transition-colors">
                     {w.word}
                   </span>
-                  <span className="text-[10px] font-mono text-sidebar-foreground/35 shrink-0 ml-auto">
+                  <span className="text-[10px] font-mono text-sidebar-foreground/50 shrink-0 ml-auto">
                     {w.phonetic?.slice(0, 12)}
                   </span>
                 </div>
                 {w.definitionVi && (
-                  <p className="text-[10px] text-sidebar-foreground/45 truncate pl-3.5 leading-relaxed">
+                  <p className="text-[10px] text-sidebar-foreground/70 truncate pl-3.5 leading-relaxed">
                     {w.definitionVi}
                   </p>
                 )}
