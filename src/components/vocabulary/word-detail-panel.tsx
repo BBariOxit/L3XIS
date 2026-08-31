@@ -128,7 +128,7 @@ export function WordDetailPanel({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 8 }}
           transition={{ duration: 0.2 }}
-          className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="h-full"
         >
           <PanelContent
             word={word}
@@ -187,7 +187,7 @@ function PanelContent({
   onClose,
 }: PanelContentProps) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 flex flex-col min-h-full">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -284,7 +284,7 @@ function PanelContent({
       </p>
 
       {/* Footer actions */}
-      <div className="flex gap-2 pt-2 border-t border-border/30">
+      <div className="flex gap-2 pt-2 border-t border-border/30 mt-auto">
         <button
           className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs text-muted-foreground hover:text-amber-400 hover:bg-amber-500/8 transition-all duration-150"
           aria-label="Favourite"
