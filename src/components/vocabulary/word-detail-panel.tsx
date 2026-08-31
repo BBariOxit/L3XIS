@@ -92,8 +92,7 @@ export function WordDetailPanel({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 350 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-card rounded-t-3xl border border-border/50 shadow-2xl max-h-[85dvh] overflow-y-auto"
+              className="fixed inset-x-0 bottom-0 z-50 bg-card rounded-t-3xl border border-border/50 shadow-2xl max-h-[85dvh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-2">
@@ -129,7 +128,7 @@ export function WordDetailPanel({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 8 }}
           transition={{ duration: 0.2 }}
-          className="h-full overflow-y-auto"
+          className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           <PanelContent
             word={word}
@@ -210,21 +209,6 @@ function PanelContent({
         </button>
       </div>
 
-      {/* Mastery bar */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className={`text-xs font-medium ${mastery.color}`}>{mastery.label}</span>
-          <span className="text-xs text-muted-foreground/50">{masteryPct.toFixed(0)}%</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${masteryPct}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className={`h-full rounded-full ${mastery.bar}`}
-          />
-        </div>
-      </div>
 
       {/* POS + Speak */}
       <div className="flex items-center justify-between gap-3">
@@ -276,15 +260,6 @@ function PanelContent({
         </div>
       </div>
 
-      {/* English definition (compact, secondary) */}
-      {word.definition && (
-        <div className="space-y-1.5 border-t border-border/30 pt-4">
-          <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/50">English</p>
-          <p className="text-xs text-muted-foreground leading-relaxed italic">
-            {word.definition}
-          </p>
-        </div>
-      )}
 
       {/* Synonyms */}
       {word.synonyms.length > 0 && (
