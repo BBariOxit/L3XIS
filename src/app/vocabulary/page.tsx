@@ -33,12 +33,11 @@ const posColor = (p: string) =>
 
 // ─── Sort options ─────────────────────────────────────────
 
-type SortKey = "addedAt" | "word" | "mastery"
+type SortKey = "addedAt" | "word"
 
 function sortWords(words: VocabWord[], key: SortKey): VocabWord[] {
   return [...words].sort((a, b) => {
     if (key === "word")    return a.word.localeCompare(b.word)
-    if (key === "mastery") return b.masteryLevel - a.masteryLevel
     // addedAt desc (newest first)
     return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
   })
@@ -270,7 +269,7 @@ export default function VocabularyPage() {
                 <div className="space-y-1.5">
                   <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Sort by</p>
                   <div className="flex gap-1.5">
-                    {(["addedAt", "word", "mastery"] as SortKey[]).map((k) => (
+                    {(["addedAt", "word"] as SortKey[]).map((k) => (
                       <button
                         key={k}
                         onClick={() => setSortKey(k)}
@@ -278,7 +277,7 @@ export default function VocabularyPage() {
                           sortKey === k ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        {k === "addedAt" ? "Recent" : k === "word" ? "A–Z" : "Mastery"}
+                        {k === "addedAt" ? "Recent" : "A–Z"}
                       </button>
                     ))}
                   </div>

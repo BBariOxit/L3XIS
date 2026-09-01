@@ -98,13 +98,6 @@ export function WordRow({ word, isSelected, onSelect, index }: WordRowProps) {
         {previewVi}
       </p>
 
-      {/* Synonyms count hint */}
-      {word.synonyms.length > 0 && (
-        <span className="shrink-0 text-[10px] text-muted-foreground/40 hidden lg:block">
-          {word.synonyms.length} syn
-        </span>
-      )}
-
       {/* Selected indicator */}
       {isSelected && (
         <span className="shrink-0 size-1.5 rounded-full bg-primary" />
